@@ -1,0 +1,23 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "bazel build -c dbg //:envoy --copt=-fno-limit-debug-info --copt=-Winconsistent-missing-override",
+            "problemMatcher":["$gcc"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "bazel test //:gfunction_filter_integration_test",
+            "problemMatcher":["$gcc"]
+        }
+    ]
+}

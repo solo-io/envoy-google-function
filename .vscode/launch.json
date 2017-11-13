@@ -1,0 +1,21 @@
+{
+        "version": "0.2.0",
+        "configurations": [
+
+            {
+                "name": "(gdb) Launch",
+                "type": "cppdbg",
+                "request": "launch",
+                "preLaunchTask": "build",
+                "program": "${workspaceRoot}/bazel-bin/envoy",
+                "args": [
+                   "--log-level","debug", "--concurrency", "1", "--config-path", "${workspaceRoot}/envoy.conf"                    
+                ],
+                "stopAtEntry": false,
+                "cwd": "${workspaceRoot}",
+                "environment": [],
+                "externalConsole": false,
+                "MIMode": "lldb"
+            }
+        ]
+    }
