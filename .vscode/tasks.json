@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "bazel build -c dbg //:envoy --copt=-fno-limit-debug-info --copt=-Winconsistent-missing-override",
+            "command": "bazel build -c dbg //:envoy --copt=-g --copt=-fno-limit-debug-info --strip=never",
             "problemMatcher":["$gcc"],
             "group": {
                 "kind": "build",

@@ -40,8 +40,6 @@ std::string GfunctionFilter::functionHostName() {
 
 Envoy::Http::FilterHeadersStatus GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool end_stream) {
   
-  ENVOY_LOG(debug, "GFUNCTION START: decodeHeaders called, end = {}", end_stream);
-
   const Envoy::Router::RouteEntry* routeEntry = decoder_callbacks_->route()->routeEntry();
 
   if (routeEntry == nullptr) {
@@ -63,7 +61,7 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::decodeHeaders(Envoy::Http::Hea
   headers.insertPath().value(functionUrlPath());
   request_headers_ = &headers;
   
-  ENVOY_LOG(debug, "GFUNCTION END: decodeHeaders called end = {}", end_stream);
+  ENVOY_LOG(debug, "GFUNCTION: decodeHeaders called end = {}", end_stream);
   
   return Envoy::Http::FilterHeadersStatus::StopIteration;
 }
@@ -74,7 +72,7 @@ Envoy::Http::FilterDataStatus GfunctionFilter::decodeData(Envoy::Buffer::Instanc
     return Envoy::Http::FilterDataStatus::Continue;    
   }
   // calc hash of data
-  ENVOY_LOG(debug, "GFUNCTION START: decodeData called end = {} data = {}", end_stream, data.length());
+  ENVOY_LOG(debug, "GFUNCTION: decodeData called end = {} data = {}", end_stream, data.length());
 
   if (end_stream) {
 
@@ -83,16 +81,12 @@ Envoy::Http::FilterDataStatus GfunctionFilter::decodeData(Envoy::Buffer::Instanc
     active_ = false;
     // add header ?!
     // get stream id
-    ENVOY_LOG(debug, "GFUNCTION END_STREAM: decodeData called end = {} data = {}", end_stream, data.length());
     return Envoy::Http::FilterDataStatus::Continue;
   }
-  ENVOY_LOG(debug, "GFUNCTION CONTINUE: decodeData called end = {} data = {}", end_stream, data.length());
   return Envoy::Http::FilterDataStatus::StopIterationAndBuffer;
 }
 
 void GfunctionFilter::Gfunctionfy() {
-  ENVOY_LOG(debug, "GFUNCTION START: Gfunctionfy");
-
   std::list<Envoy::Http::LowerCaseString> headers;
   
   headers.push_back(Envoy::Http::LowerCaseString("host"));

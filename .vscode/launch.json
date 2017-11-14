@@ -15,7 +15,10 @@
                 "cwd": "${workspaceRoot}",
                 "environment": [],
                 "externalConsole": false,
-                "MIMode": "lldb"
+                "MIMode": "lldb",
+                "sourceFileMap": {
+                    "${workspaceRoot}/bazel-bin/envoy": "${workspaceRoot}/envoy"
+                }
             }
         ]
     }
