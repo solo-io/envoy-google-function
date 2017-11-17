@@ -10,7 +10,8 @@
                 "/usr/include",
                 "${workspaceRoot}",
                 "${workspaceRoot}/envoy/source",
-                "${workspaceRoot}/envoy/include"
+                "${workspaceRoot}/envoy/include",
+                "${workspaceRoot}/envoy"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",

@@ -4,17 +4,18 @@
 #include "test/integration/http_integration.h"
 
 namespace Solo {
-class LambdaFilterIntegrationTest : public Envoy::HttpIntegrationTest,
+class GfunctionFilterIntegrationTest : public Envoy::HttpIntegrationTest,
                                         public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
 public:
-  LambdaFilterIntegrationTest() : Envoy::HttpIntegrationTest(Envoy::Http::CodecClient::Type::HTTP1, GetParam()) {}
+  GfunctionFilterIntegrationTest() : Envoy::HttpIntegrationTest(Envoy::Http::CodecClient::Type::HTTP1, GetParam()) {}
   /**
    * Initializer for an individual integration test.
    */
   void SetUp() override {
+    
     fake_upstreams_.emplace_back(new Envoy::FakeUpstream(0, Envoy::FakeHttpConnection::Type::HTTP1, version_));
     registerPort("upstream_0", fake_upstreams_.back()->localAddress()->ip()->port());
-    createTestServer("envoy-test.conf", {"http"});
+    createTestServer("envoy-test.conf", {"http"}); 
   }
 
   /**
@@ -26,10 +27,11 @@ public:
   }
 };
 
-INSTANTIATE_TEST_CASE_P(IpVersions, LambdaFilterIntegrationTest,
+INSTANTIATE_TEST_CASE_P(IpVersions, GfunctionFilterIntegrationTest,
                         testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()));
 
-TEST_P(LambdaFilterIntegrationTest, Test1) {
+TEST_P(GfunctionFilterIntegrationTest, Test1) {
+  
   Envoy::Http::TestHeaderMapImpl headers{{":method", "POST"}, {":authority", "www.solo.io"}, {":path", "/"}};
 
   Envoy::IntegrationCodecClientPtr codec_client;
@@ -51,6 +53,6 @@ TEST_P(LambdaFilterIntegrationTest, Test1) {
 
   EXPECT_NE(0, request_stream->headers().get(Envoy::Http::LowerCaseString("authorization"))->value().size());
 
-  codec_client->close();
+  codec_client->close(); 
 }
 } // Solo
