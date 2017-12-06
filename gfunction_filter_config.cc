@@ -67,7 +67,9 @@ public:
     return [access_key, secret_key, functions](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
       auto filter = new Gfunction::GfunctionFilter(std::move(access_key), std::move(secret_key), std::move(functions));
       callbacks.addStreamDecoderFilter(
-          Envoy::Http::StreamDecoderFilterSharedPtr{filter});
+        Envoy::Http::StreamDecoderFilterSharedPtr{filter});
+      callbacks.addStreamEncoderFilter(
+        Envoy::Http::StreamEncoderFilterSharedPtr{filter});
     };
   }
   std::string name() override { return "Gfunction"; }

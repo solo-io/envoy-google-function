@@ -15,10 +15,17 @@
                 "cwd": "${workspaceRoot}",
                 "environment": [],
                 "externalConsole": false,
-                "MIMode": "lldb",
+                "MIMode": "gdb",
                 "sourceFileMap": {
-                    "${workspaceRoot}/bazel-bin/envoy": "${workspaceRoot}/envoy"
-                }
+                    "/proc/self/cwd/external/envoy": "${workspaceRoot}/envoy"
+                },
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ]
             }
         ]
     }

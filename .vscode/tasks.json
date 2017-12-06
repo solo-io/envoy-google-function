@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "bazel build -c dbg //:envoy --copt=-g --copt=-fno-limit-debug-info --strip=never",
+            "command": "bazel build -c dbg //:envoy",
             "problemMatcher":["$gcc"],
             "group": {
                 "kind": "build",

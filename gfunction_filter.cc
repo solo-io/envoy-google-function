@@ -19,6 +19,7 @@ namespace Gfunction {
 GfunctionFilter::GfunctionFilter(std::string access_key, std::string secret_key, ClusterFunctionMap functions) : 
   functions_(std::move(functions)),
   active_(false), 
+  tracingEnabled_(false),
   googleAuthenticator_(std::move(access_key), std::move(secret_key), std::string("Gfunction")) {
 }
 
@@ -28,7 +29,7 @@ void GfunctionFilter::onDestroy() {}
 
 std::string GfunctionFilter::functionUrlPath() {
   std::stringstream val;
-  val << "/"<< currentFunction_.func_name_;
+  val << "/" << currentFunction_.func_name_;
   return val.str();
 }
 
@@ -59,8 +60,23 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::decodeHeaders(Envoy::Http::Hea
   
 //  headers.removeContentLength();  
   headers.insertPath().value(functionUrlPath());
+  headers.insertHost().value(functionHostName());
+
+  // Check if tracing is enabled
+  const Envoy::Http::HeaderEntry* p = headers.XB3TraceId();
+  if(p != NULL) {
+    ENVOY_LOG(debug, "GFUNCTION: Tracing is ON");
+    tracingEnabled_ = true;
+  }
+  else {
+    ENVOY_LOG(debug, "GFUNCTION: Tracing is OFF");
+    tracingEnabled_ = false;
+  }
+
   request_headers_ = &headers;
-  
+
+  logHeaders(headers);
+
   ENVOY_LOG(debug, "GFUNCTION: decodeHeaders called end = {}", end_stream);
   
   return Envoy::Http::FilterHeadersStatus::StopIteration;
@@ -75,12 +91,9 @@ Envoy::Http::FilterDataStatus GfunctionFilter::decodeData(Envoy::Buffer::Instanc
   ENVOY_LOG(debug, "GFUNCTION: decodeData called end = {} data = {}", end_stream, data.length());
 
   if (end_stream) {
-
     Gfunctionfy();
     request_headers_ = nullptr;
     active_ = false;
-    // add header ?!
-    // get stream id
     return Envoy::Http::FilterDataStatus::Continue;
   }
   return Envoy::Http::FilterDataStatus::StopIterationAndBuffer;
@@ -90,8 +103,6 @@ void GfunctionFilter::Gfunctionfy() {
   std::list<Envoy::Http::LowerCaseString> headers;
   
   headers.push_back(Envoy::Http::LowerCaseString("host"));
-  request_headers_->insertHost().value(functionHostName());
-
   headers.push_back(Envoy::Http::LowerCaseString("content-type"));
 }
 
@@ -99,14 +110,66 @@ Envoy::Http::FilterTrailersStatus GfunctionFilter::decodeTrailers(Envoy::Http::H
   if (!active_) {
     return Envoy::Http::FilterTrailersStatus::Continue;    
   }
-
-  Gfunctionfy();
-  
+  Gfunctionfy();  
   return Envoy::Http::FilterTrailersStatus::Continue;
 }
 
 void GfunctionFilter::setDecoderFilterCallbacks(Envoy::Http::StreamDecoderFilterCallbacks& callbacks) {
   decoder_callbacks_ = &callbacks;
+}
+
+Envoy::Http::FilterHeadersStatus GfunctionFilter::encodeHeaders(Envoy::Http::HeaderMap& headers, bool end_stream) {
+  const Envoy::Router::RouteEntry* routeEntry = encoder_callbacks_->route()->routeEntry();
+  ENVOY_LOG(debug, "GFUNCTION: encodeHeaders called end = {}", end_stream);
+  if (routeEntry == nullptr) {
+    return Envoy::Http::FilterHeadersStatus::Continue;    
+  }
+
+  const std::string& cluster_name = routeEntry->clusterName();
+  ClusterFunctionMap::iterator currentFunction = functions_.find(cluster_name);
+  if (currentFunction == functions_.end()){
+    return Envoy::Http::FilterHeadersStatus::Continue;    
+  }
+
+  active_ = true;
+  currentFunction_ = currentFunction->second;
+  
+  logHeaders(headers);
+  return Envoy::Http::FilterHeadersStatus::StopIteration;
+}
+
+Envoy::Http::FilterDataStatus GfunctionFilter::encodeData(Envoy::Buffer::Instance&, bool end_stream) {
+  ENVOY_LOG(debug, "GFUNCTION: encodeData called end = {}", end_stream);
+  if (!active_) {
+    return Envoy::Http::FilterDataStatus::Continue;    
+  }
+  if (end_stream) {
+    request_headers_ = nullptr;
+    active_ = false;
+    // add header ?!
+    // get stream id
+    return Envoy::Http::FilterDataStatus::Continue;
+  }
+  return Envoy::Http::FilterDataStatus::StopIterationAndBuffer;
+}
+
+Envoy::Http::FilterTrailersStatus GfunctionFilter::encodeTrailers(Envoy::Http::HeaderMap&) {
+  return Envoy::Http::FilterTrailersStatus::Continue; 
+}
+
+void GfunctionFilter::setEncoderFilterCallbacks(Envoy::Http::StreamEncoderFilterCallbacks& callbacks) {
+  encoder_callbacks_ = &callbacks;
+}
+
+void GfunctionFilter::logHeaders(Envoy::Http::HeaderMap& headers) {
+ // Print all headers - DEBUG
+  headers.iterate(
+      [](const Envoy::Http::HeaderEntry& header, void* ) -> Envoy::Http::HeaderMap::Iterate {
+        ENVOY_LOG(debug, "  '{}':'{}'",
+                         header.key().c_str(), header.value().c_str());
+        return Envoy::Http::HeaderMap::Iterate::Continue;
+      },
+      this);
 }
 
 } // Gfunction

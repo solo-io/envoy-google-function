@@ -9,6 +9,15 @@
     "memory": "cpp",
     "tuple": "cpp",
     "type_traits": "cpp",
-    "utility": "cpp"
+    "utility": "cpp",
+    "cmath": "cpp",
+    "array": "cpp",
+    "*.tcc": "cpp",
+    "istream": "cpp",
+    "bitset": "cpp",
+    "optional": "cpp",
+    "string_view": "cpp",
+    "system_error": "cpp",
+    "thread": "cpp"
   }
 }

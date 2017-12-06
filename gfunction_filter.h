@@ -22,8 +22,10 @@ struct Function {
 
 typedef std::map<std::string, Function> ClusterFunctionMap;
 
-
-class GfunctionFilter : public Envoy::Http::StreamDecoderFilter,  public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
+class GfunctionFilter : 
+        public Envoy::Http::StreamDecoderFilter, 
+        public Envoy::Http::StreamEncoderFilter, 
+        public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 public:
   GfunctionFilter(std::string access_key, std::string secret_key, ClusterFunctionMap functions);
   ~GfunctionFilter();
@@ -37,16 +39,26 @@ public:
   Envoy::Http::FilterTrailersStatus decodeTrailers(Envoy::Http::HeaderMap&) override;
   void setDecoderFilterCallbacks(Envoy::Http::StreamDecoderFilterCallbacks& callbacks) override;
 
+  // Http::StreamEncoderFilter
+  Envoy::Http::FilterHeadersStatus encodeHeaders(Envoy::Http::HeaderMap& headers, bool) override;
+  Envoy::Http::FilterDataStatus encodeData(Envoy::Buffer::Instance&, bool) override;
+  Envoy::Http::FilterTrailersStatus encodeTrailers(Envoy::Http::HeaderMap&) override;
+  void setEncoderFilterCallbacks(Envoy::Http::StreamEncoderFilterCallbacks& callbacks) override;
+
+
 private:
   Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
+  Envoy::Http::StreamEncoderFilterCallbacks* encoder_callbacks_;
   ClusterFunctionMap functions_;
   Function currentFunction_;
   void Gfunctionfy();
+  void logHeaders(Envoy::Http::HeaderMap&);
   std::string functionUrlPath();
   std::string functionHostName();
 
   Envoy::Http::HeaderMap* request_headers_{};
   bool active_;
+  bool tracingEnabled_;
   GoogleAuthenticator googleAuthenticator_;
 };
 
