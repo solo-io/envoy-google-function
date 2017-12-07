@@ -8,6 +8,11 @@
 #include "common/common/empty_string.h"
 #include "common/common/utility.h"
 
+
+#define COPY_INLINE_HEADER(name, from, to) \
+  if(from->name() != nullptr) \
+    to->insert##name().value(std::string(from->name()->value().c_str()));
+
 namespace solo {
 namespace logger {
 
@@ -20,13 +25,23 @@ namespace logger {
 
   CloudCollector::~CloudCollector() {}
 
-  void CloudCollector::storeRequestInfo(solo::logger::RequestInfo& info) {
+  void CloudCollector::storeRequestInfo(solo::logger::RequestInfo& info, Envoy::Http::HeaderMap* headers) {
 
     Envoy::Http::MessagePtr request(new Envoy::Http::RequestMessageImpl());
     request->headers().insertContentType().value(std::string("application/json"));
     request->headers().insertPath().value(std::string("/api/v1/store"));
     request->headers().insertHost().value(std::string("sololog"));
     request->headers().insertMethod().value(std::string("POST"));
+
+    Envoy::Http::HeaderMap* h = &(request->headers());
+    COPY_INLINE_HEADER(RequestId, headers, h);
+    COPY_INLINE_HEADER(XB3TraceId, headers, h);
+    COPY_INLINE_HEADER(XB3SpanId, headers, h);
+    COPY_INLINE_HEADER(XB3ParentSpanId, headers, h);
+    COPY_INLINE_HEADER(XB3Sampled, headers, h);
+    COPY_INLINE_HEADER(OtSpanContext, headers, h);
+
+    //h->insertRequestId().value(std::string(headers->RequestId()->value().c_str()));
 
     std::string body = "{\"requestId\":\"" + info.request_id_ + 
           "\",\"function\":\"" + info.function_name_ + 
@@ -51,7 +66,6 @@ namespace logger {
 
   void CloudCollector::onFailure(Envoy::Http::AsyncClient::FailureReason) {
   }
-  
 
 } // logger
 } // solo

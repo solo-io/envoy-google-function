@@ -26,7 +26,7 @@ namespace logger {
     CloudCollector(Envoy::Upstream::ClusterManager& cm);
     ~CloudCollector();
 
-    void storeRequestInfo(RequestInfo& info);
+    void storeRequestInfo(RequestInfo& info, Envoy::Http::HeaderMap* headers);
     void abortRequest();
     
     // Http::AsyncClient::Callbacks

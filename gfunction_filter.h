@@ -57,6 +57,7 @@ private:
   std::string functionHostName();
 
   Envoy::Http::HeaderMap* request_headers_{};
+  Envoy::Http::HeaderMap* tracing_headers_{};
   bool active_;
   bool tracingEnabled_;
   GoogleAuthenticator googleAuthenticator_;

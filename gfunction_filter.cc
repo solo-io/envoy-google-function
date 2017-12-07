@@ -74,6 +74,7 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::decodeHeaders(Envoy::Http::Hea
   if(p != NULL) {
     ENVOY_LOG(debug, "GFUNCTION: Tracing is ON");
     tracingEnabled_ = true;
+    tracing_headers_ = &headers;
   }
   else {
     ENVOY_LOG(debug, "GFUNCTION: Tracing is OFF");
@@ -147,8 +148,8 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::encodeHeaders(Envoy::Http::Hea
   //tracingEnabled_ = true;
   if(tracingEnabled_) {
     ENVOY_LOG(info, "GFUNCTION: Storing cloud tracing info");
-    Envoy::Http::LowerCaseString lcs("function-execution-id");
-    const Envoy::Http::HeaderEntry* hdr = headers.get(lcs);
+    const Envoy::Http::HeaderEntry* hdr = headers.get(
+      Envoy::Http::LowerCaseString("function-execution-id"));
     if(hdr != nullptr) {
       solo::logger::RequestInfo info;
       info.function_name_ = currentFunction_.func_name_;
@@ -156,7 +157,7 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::encodeHeaders(Envoy::Http::Hea
       info.project_ = currentFunction_.project_;
       info.provider_ = "google";
       info.request_id_ = hdr->value().c_str();
-      collector_.storeRequestInfo(info);
+      collector_.storeRequestInfo(info, tracing_headers_);
     }
   }
   else {
