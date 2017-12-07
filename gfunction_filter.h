@@ -9,6 +9,7 @@
 #include "common/common/logger.h"
 
 #include "google_authenticator.h"
+#include "solo_logger.h"
 
 namespace Solo {
 namespace Gfunction {
@@ -23,11 +24,10 @@ struct Function {
 typedef std::map<std::string, Function> ClusterFunctionMap;
 
 class GfunctionFilter : 
-        public Envoy::Http::StreamDecoderFilter, 
-        public Envoy::Http::StreamEncoderFilter, 
+        public Envoy::Http::StreamFilter, 
         public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 public:
-  GfunctionFilter(std::string access_key, std::string secret_key, ClusterFunctionMap functions);
+  GfunctionFilter(Envoy::Upstream::ClusterManager& cm, std::string access_key, std::string secret_key, ClusterFunctionMap functions);
   ~GfunctionFilter();
 
   // Http::StreamFilterBase
@@ -60,6 +60,8 @@ private:
   bool active_;
   bool tracingEnabled_;
   GoogleAuthenticator googleAuthenticator_;
+
+  solo::logger::CloudCollector collector_;
 };
 
 } // Gfunction

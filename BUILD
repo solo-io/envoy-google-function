@@ -16,6 +16,15 @@ envoy_cc_binary(
     ],
 )
 
+envoy_cc_library(
+    name = "solo_logger_lib",
+    srcs = ["solo_logger.cc"],
+    hdrs = ["solo_logger.h"],
+    repository = "@envoy",
+    deps = [
+        "@envoy//source/exe:envoy_common_lib",
+    ],    
+)
 
 envoy_cc_library(
     name = "google_authenticator_lib",
@@ -33,7 +42,8 @@ envoy_cc_library(
     hdrs = ["gfunction_filter.h"],
     repository = "@envoy",
     deps = [
-        ":google_authenticator_lib",        
+        ":google_authenticator_lib",   
+        ":solo_logger_lib",     
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

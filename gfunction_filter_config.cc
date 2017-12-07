@@ -40,7 +40,7 @@ const std::string gFUNCTION_HTTP_FILTER_SCHEMA(R"EOF(
 class GfunctionFilterConfig : public Envoy::Server::Configuration::NamedHttpFilterConfigFactory {
 public:
   Envoy::Server::Configuration::HttpFilterFactoryCb createFilterFactory(const Envoy::Json::Object& json_config, const std::string&,
-    Envoy::Server::Configuration::FactoryContext&) override {
+    Envoy::Server::Configuration::FactoryContext& context) override {
     json_config.validateSchema(gFUNCTION_HTTP_FILTER_SCHEMA);
                      
   std::string access_key = json_config.getString("access_key", "");
@@ -64,12 +64,14 @@ public:
     return true;
   });
 
-    return [access_key, secret_key, functions](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
-      auto filter = new Gfunction::GfunctionFilter(std::move(access_key), std::move(secret_key), std::move(functions));
-      callbacks.addStreamDecoderFilter(
-        Envoy::Http::StreamDecoderFilterSharedPtr{filter});
-      callbacks.addStreamEncoderFilter(
-        Envoy::Http::StreamEncoderFilterSharedPtr{filter});
+    return [&context, access_key, secret_key, functions](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
+      auto filter = new Gfunction::GfunctionFilter(
+        context.clusterManager(), 
+        std::move(access_key), 
+        std::move(secret_key), 
+        std::move(functions));
+      callbacks.addStreamFilter(
+        Envoy::Http::StreamFilterSharedPtr{filter});
     };
   }
   std::string name() override { return "Gfunction"; }

@@ -16,16 +16,23 @@
 namespace Solo {
 namespace Gfunction {
 
-GfunctionFilter::GfunctionFilter(std::string access_key, std::string secret_key, ClusterFunctionMap functions) : 
+GfunctionFilter::GfunctionFilter(
+    Envoy::Upstream::ClusterManager& cm, 
+    std::string access_key, 
+    std::string secret_key, 
+    ClusterFunctionMap functions) :
   functions_(std::move(functions)),
   active_(false), 
   tracingEnabled_(false),
-  googleAuthenticator_(std::move(access_key), std::move(secret_key), std::string("Gfunction")) {
+  googleAuthenticator_(std::move(access_key), std::move(secret_key), std::string("Gfunction")), 
+  collector_(cm) {
 }
 
 GfunctionFilter::~GfunctionFilter() {}
 
-void GfunctionFilter::onDestroy() {}
+void GfunctionFilter::onDestroy() {
+  collector_.abortRequest();
+}
 
 std::string GfunctionFilter::functionUrlPath() {
   std::stringstream val;
@@ -135,11 +142,33 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::encodeHeaders(Envoy::Http::Hea
   currentFunction_ = currentFunction->second;
   
   logHeaders(headers);
+  request_headers_ = &headers;
+
+  //tracingEnabled_ = true;
+  if(tracingEnabled_) {
+    ENVOY_LOG(info, "GFUNCTION: Storing cloud tracing info");
+    Envoy::Http::LowerCaseString lcs("function-execution-id");
+    const Envoy::Http::HeaderEntry* hdr = headers.get(lcs);
+    if(hdr != nullptr) {
+      solo::logger::RequestInfo info;
+      info.function_name_ = currentFunction_.func_name_;
+      info.region_ = currentFunction_.region_;
+      info.project_ = currentFunction_.project_;
+      info.provider_ = "google";
+      info.request_id_ = hdr->value().c_str();
+      collector_.storeRequestInfo(info);
+    }
+  }
+  else {
+    ENVOY_LOG(info, "GFUNCTION: Not storing cloud tracing info");
+  }
   return Envoy::Http::FilterHeadersStatus::StopIteration;
 }
 
 Envoy::Http::FilterDataStatus GfunctionFilter::encodeData(Envoy::Buffer::Instance&, bool end_stream) {
   ENVOY_LOG(debug, "GFUNCTION: encodeData called end = {}", end_stream);
+  return Envoy::Http::FilterDataStatus::Continue;
+  /*
   if (!active_) {
     return Envoy::Http::FilterDataStatus::Continue;    
   }
@@ -151,6 +180,7 @@ Envoy::Http::FilterDataStatus GfunctionFilter::encodeData(Envoy::Buffer::Instanc
     return Envoy::Http::FilterDataStatus::Continue;
   }
   return Envoy::Http::FilterDataStatus::StopIterationAndBuffer;
+  */
 }
 
 Envoy::Http::FilterTrailersStatus GfunctionFilter::encodeTrailers(Envoy::Http::HeaderMap&) {
