@@ -61,6 +61,7 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::decodeHeaders(Envoy::Http::Hea
   }
 
   active_ = true;
+  collector_.startRequestInfo();
   currentFunction_ = currentFunction->second;
 
   headers.insertMethod().value().setReference(Envoy::Http::Headers::get().MethodValues.Post);
@@ -145,7 +146,6 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::encodeHeaders(Envoy::Http::Hea
   logHeaders(headers);
   request_headers_ = &headers;
 
-  //tracingEnabled_ = true;
   if(tracingEnabled_) {
     ENVOY_LOG(info, "GFUNCTION: Storing cloud tracing info");
     const Envoy::Http::HeaderEntry* hdr = headers.get(
@@ -168,20 +168,16 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::encodeHeaders(Envoy::Http::Hea
 
 Envoy::Http::FilterDataStatus GfunctionFilter::encodeData(Envoy::Buffer::Instance&, bool end_stream) {
   ENVOY_LOG(debug, "GFUNCTION: encodeData called end = {}", end_stream);
-  return Envoy::Http::FilterDataStatus::Continue;
-  /*
+  
   if (!active_) {
     return Envoy::Http::FilterDataStatus::Continue;    
   }
   if (end_stream) {
     request_headers_ = nullptr;
     active_ = false;
-    // add header ?!
-    // get stream id
     return Envoy::Http::FilterDataStatus::Continue;
   }
-  return Envoy::Http::FilterDataStatus::StopIterationAndBuffer;
-  */
+  return Envoy::Http::FilterDataStatus::StopIterationAndBuffer;  
 }
 
 Envoy::Http::FilterTrailersStatus GfunctionFilter::encodeTrailers(Envoy::Http::HeaderMap&) {
@@ -196,7 +192,7 @@ void GfunctionFilter::logHeaders(Envoy::Http::HeaderMap& headers) {
  // Print all headers - DEBUG
   headers.iterate(
       [](const Envoy::Http::HeaderEntry& header, void* ) -> Envoy::Http::HeaderMap::Iterate {
-        ENVOY_LOG(debug, "  '{}':'{}'",
+        ENVOY_LOG(debug, "GFUNCTION: '{}':'{}'",
                          header.key().c_str(), header.value().c_str());
         return Envoy::Http::HeaderMap::Iterate::Continue;
       },

@@ -21,11 +21,14 @@ namespace logger {
     std::string provider_;
   };
 
-  class CloudCollector : public Envoy::Http::AsyncClient::Callbacks {
+  class CloudCollector : 
+      public Envoy::Http::AsyncClient::Callbacks, 
+      public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
     public:
     CloudCollector(Envoy::Upstream::ClusterManager& cm);
     ~CloudCollector();
 
+    void startRequestInfo();
     void storeRequestInfo(RequestInfo& info, Envoy::Http::HeaderMap* headers);
     void abortRequest();
     
@@ -35,6 +38,7 @@ namespace logger {
 
     private:
     Envoy::Upstream::ClusterManager& cm_;
+    Envoy::Event::TimerPtr delay_timer_;
     std::string cluster_name_;
     Envoy::Optional<std::chrono::milliseconds> timeout_;
     uint retry_count_;
