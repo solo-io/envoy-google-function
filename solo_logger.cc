@@ -16,6 +16,18 @@
 namespace solo {
 namespace logger {
 
+  // Class to provide required callbacks to the AsyncClient send method
+  class Callbacker : public Envoy::Http::AsyncClient::Callbacks {
+    public:
+    void onSuccess(Envoy::Http::MessagePtr&&) override {
+
+    }
+    void onFailure(Envoy::Http::AsyncClient::FailureReason) override {
+
+    }
+  };
+  Callbacker globalCb;
+
   CloudCollector::CloudCollector(Envoy::Upstream::ClusterManager& cm) :
     cm_(cm),
     delay_timer_(nullptr),
@@ -25,22 +37,6 @@ namespace logger {
     in_flight_request_(nullptr) {}
 
   CloudCollector::~CloudCollector() {}
-
-  void CloudCollector::startRequestInfo() {
-
-    Envoy::Http::MessagePtr request(new Envoy::Http::RequestMessageImpl());
-    request->headers().insertContentType().value(std::string("application/json"));
-    request->headers().insertPath().value(std::string("/api/v1/store"));
-    request->headers().insertHost().value(std::string("sololog"));
-    request->headers().insertMethod().value(std::string("POST"));
-
-    std::string body = "{}";
-
-    request->body().reset(new Envoy::Buffer::OwnedImpl(body));
-
-    in_flight_request_ = cm_.httpAsyncClientForCluster(cluster_name_).send(std::move(request), *this, timeout_);
-    ENVOY_LOG(debug, "SOLO_LOGGER: Async request to start tracing info was sent to cluster: \"{}\"", cluster_name_);
-  }
 
   void CloudCollector::storeRequestInfo(solo::logger::RequestInfo& info, Envoy::Http::HeaderMap* headers) {
 
@@ -68,34 +64,8 @@ namespace logger {
 
     request->body().reset(new Envoy::Buffer::OwnedImpl(body));
 
-    in_flight_request_ = cm_.httpAsyncClientForCluster(cluster_name_).send(std::move(request), *this, timeout_);
+    in_flight_request_ = cm_.httpAsyncClientForCluster(cluster_name_).send(std::move(request), globalCb, timeout_);
     ENVOY_LOG(debug, "SOLO_LOGGER: Async request to store tracing info was sent to cluster: \"{}\"", cluster_name_);
   }
-
-  void CloudCollector::abortRequest() {
-    if (in_flight_request_ != nullptr) {
-/*      
-      ENVOY_LOG(debug, "SOLO_LOGGER: Cancelling store request");
-      std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-      if(in_flight_request_ == nullptr) {
-        return;
-      }
-*/
-      in_flight_request_->cancel();
-      in_flight_request_ = nullptr;
-      ENVOY_LOG(debug, "SOLO_LOGGER: Store request was canceled");    
-    }
-  }
-
-  void CloudCollector::onSuccess(Envoy::Http::MessagePtr&&) {
-    in_flight_request_ = nullptr;
-    ENVOY_LOG(debug, "SOLO_LOGGER: Store request completed");
-  }
-
-  void CloudCollector::onFailure(Envoy::Http::AsyncClient::FailureReason) {
-    in_flight_request_ = nullptr;
-    ENVOY_LOG(debug, "SOLO_LOGGER: Store request failed");
-  }
-
 } // logger
 } // solo

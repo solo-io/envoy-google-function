@@ -9,7 +9,7 @@
                 "preLaunchTask": "build",
                 "program": "${workspaceRoot}/bazel-bin/envoy",
                 "args": [
-                   "--log-level","debug", "--concurrency", "1", "--config-path", "${workspaceRoot}/envoy.conf"                    
+                   "--log-level","debug", "--concurrency", "1", "--config-path", "${workspaceRoot}/envoy-jaeger.conf", "--service-cluster", "gcloud-func1"                   
                 ],
                 "stopAtEntry": false,
                 "cwd": "${workspaceRoot}",

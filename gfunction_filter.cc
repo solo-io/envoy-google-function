@@ -31,7 +31,6 @@ GfunctionFilter::GfunctionFilter(
 GfunctionFilter::~GfunctionFilter() {}
 
 void GfunctionFilter::onDestroy() {
-  collector_.abortRequest();
 }
 
 std::string GfunctionFilter::functionUrlPath() {
@@ -61,24 +60,20 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::decodeHeaders(Envoy::Http::Hea
   }
 
   active_ = true;
-  collector_.startRequestInfo();
   currentFunction_ = currentFunction->second;
 
   headers.insertMethod().value().setReference(Envoy::Http::Headers::get().MethodValues.Post);
   
-//  headers.removeContentLength();  
   headers.insertPath().value(functionUrlPath());
   headers.insertHost().value(functionHostName());
 
   // Check if tracing is enabled
   const Envoy::Http::HeaderEntry* p = headers.XB3TraceId();
   if(p != NULL) {
-    ENVOY_LOG(debug, "GFUNCTION: Tracing is ON");
     tracingEnabled_ = true;
     tracing_headers_ = &headers;
   }
   else {
-    ENVOY_LOG(debug, "GFUNCTION: Tracing is OFF");
     tracingEnabled_ = false;
   }
 
