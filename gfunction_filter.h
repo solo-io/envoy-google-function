@@ -27,7 +27,7 @@ class GfunctionFilter :
         public Envoy::Http::StreamFilter, 
         public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 public:
-  GfunctionFilter(Envoy::Upstream::ClusterManager& cm, std::string access_key, std::string secret_key, ClusterFunctionMap functions);
+  GfunctionFilter(Envoy::Upstream::ClusterManager& cm, Solo::Logger::CallbackerSharedPtr cb, std::string access_key, std::string secret_key, ClusterFunctionMap functions);
   ~GfunctionFilter();
 
   // Http::StreamFilterBase
@@ -62,7 +62,7 @@ private:
   bool tracingEnabled_;
   GoogleAuthenticator googleAuthenticator_;
 
-  solo::logger::CloudCollector collector_;
+  Solo::Logger::CloudCollector collector_;
 };
 
 } // Gfunction

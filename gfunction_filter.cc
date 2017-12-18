@@ -18,6 +18,7 @@ namespace Gfunction {
 
 GfunctionFilter::GfunctionFilter(
     Envoy::Upstream::ClusterManager& cm, 
+    Solo::Logger::CallbackerSharedPtr cb,
     std::string access_key, 
     std::string secret_key, 
     ClusterFunctionMap functions) :
@@ -25,7 +26,7 @@ GfunctionFilter::GfunctionFilter(
   active_(false), 
   tracingEnabled_(false),
   googleAuthenticator_(std::move(access_key), std::move(secret_key), std::string("Gfunction")), 
-  collector_(cm) {
+  collector_(cm, cb) {
 }
 
 GfunctionFilter::~GfunctionFilter() {}
@@ -146,7 +147,7 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::encodeHeaders(Envoy::Http::Hea
     const Envoy::Http::HeaderEntry* hdr = headers.get(
       Envoy::Http::LowerCaseString("function-execution-id"));
     if(hdr != nullptr) {
-      solo::logger::RequestInfo info;
+      Solo::Logger::RequestInfo info;
       info.function_name_ = currentFunction_.func_name_;
       info.region_ = currentFunction_.region_;
       info.project_ = currentFunction_.project_;

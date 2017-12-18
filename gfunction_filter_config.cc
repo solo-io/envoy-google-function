@@ -4,6 +4,8 @@
 
 #include "envoy/registry/registry.h"
 
+#include "solo_logger.h"
+
 namespace Solo {
 namespace Gfunction {
 namespace Configuration {
@@ -37,7 +39,7 @@ const std::string gFUNCTION_HTTP_FILTER_SCHEMA(R"EOF(
   }
   )EOF");
 
-class GfunctionFilterConfig : public Envoy::Server::Configuration::NamedHttpFilterConfigFactory {
+class GfunctionFilterFactory : public Envoy::Server::Configuration::NamedHttpFilterConfigFactory {
 public:
   Envoy::Server::Configuration::HttpFilterFactoryCb createFilterFactory(const Envoy::Json::Object& json_config, const std::string&,
     Envoy::Server::Configuration::FactoryContext& context) override {
@@ -46,6 +48,9 @@ public:
   std::string access_key = json_config.getString("access_key", "");
   std::string secret_key = json_config.getString("secret_key", "");
   const Envoy::Json::ObjectSharedPtr functions_obj = json_config.getObject("functions", false);
+
+  //Solo::Logger::Callbacker cb;
+  Solo::Logger::CallbackerSharedPtr cb = std::make_shared<Solo::Logger::Callbacker>();
 
   Gfunction::ClusterFunctionMap functions;
 
@@ -64,9 +69,10 @@ public:
     return true;
   });
 
-    return [&context, access_key, secret_key, functions](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
+    return [&context, cb, access_key, secret_key, functions](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
       auto filter = new Gfunction::GfunctionFilter(
-        context.clusterManager(), 
+        context.clusterManager(),
+        std::move(cb), 
         std::move(access_key), 
         std::move(secret_key), 
         std::move(functions));
@@ -80,7 +86,7 @@ public:
 /**
  * Static registration for this sample filter. @see RegisterFactory.
  */
-static Envoy::Registry::RegisterFactory<GfunctionFilterConfig, Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
+static Envoy::Registry::RegisterFactory<GfunctionFilterFactory, Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
     register_;
 
 } // Configuration

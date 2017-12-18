@@ -13,23 +13,12 @@
   if(from->name() != nullptr) \
     to->insert##name().value(std::string(from->name()->value().c_str()));
 
-namespace solo {
-namespace logger {
+namespace Solo {
+namespace Logger {
 
-  // Class to provide required callbacks to the AsyncClient send method
-  class Callbacker : public Envoy::Http::AsyncClient::Callbacks {
-    public:
-    void onSuccess(Envoy::Http::MessagePtr&&) override {
-
-    }
-    void onFailure(Envoy::Http::AsyncClient::FailureReason) override {
-
-    }
-  };
-  Callbacker globalCb;
-
-  CloudCollector::CloudCollector(Envoy::Upstream::ClusterManager& cm) :
+  CloudCollector::CloudCollector(Envoy::Upstream::ClusterManager& cm, CallbackerSharedPtr cb) :
     cm_(cm),
+    callbacks_(cb),
     delay_timer_(nullptr),
     cluster_name_("sololog"),
     timeout_(std::chrono::milliseconds(1000)),
@@ -38,7 +27,7 @@ namespace logger {
 
   CloudCollector::~CloudCollector() {}
 
-  void CloudCollector::storeRequestInfo(solo::logger::RequestInfo& info, Envoy::Http::HeaderMap* headers) {
+  void CloudCollector::storeRequestInfo(RequestInfo& info, Envoy::Http::HeaderMap* headers) {
 
     Envoy::Http::MessagePtr request(new Envoy::Http::RequestMessageImpl());
     request->headers().insertContentType().value(std::string("application/json"));
@@ -64,7 +53,7 @@ namespace logger {
 
     request->body().reset(new Envoy::Buffer::OwnedImpl(body));
 
-    in_flight_request_ = cm_.httpAsyncClientForCluster(cluster_name_).send(std::move(request), globalCb, timeout_);
+    in_flight_request_ = cm_.httpAsyncClientForCluster(cluster_name_).send(std::move(request), *(callbacks_.get()), timeout_);
     ENVOY_LOG(debug, "SOLO_LOGGER: Async request to store tracing info was sent to cluster: \"{}\"", cluster_name_);
   }
 } // logger
