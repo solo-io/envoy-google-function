@@ -25,7 +25,7 @@ CloudCollector::CloudCollector(Envoy::Upstream::ClusterManager &cm,
 CloudCollector::~CloudCollector() {}
 
 void CloudCollector::storeRequestInfo(CloudCollector::RequestInfo &info,
-                                      Envoy::Http::HeaderMap *headers) {
+                                      Envoy::Http::HeaderMap *tracing_headers) {
 
   Envoy::Http::MessagePtr request(new Envoy::Http::RequestMessageImpl());
   request->headers().insertContentType().value(std::string("application/json"));
@@ -33,14 +33,14 @@ void CloudCollector::storeRequestInfo(CloudCollector::RequestInfo &info,
   request->headers().insertHost().value(std::string("sololog"));
   request->headers().insertMethod().value(std::string("POST"));
 
-  if (headers != nullptr) {
+  if (tracing_headers != nullptr) {
     Envoy::Http::HeaderMap *h = &(request->headers());
-    COPY_INLINE_HEADER(RequestId, headers, h);
-    COPY_INLINE_HEADER(XB3TraceId, headers, h);
-    COPY_INLINE_HEADER(XB3SpanId, headers, h);
-    COPY_INLINE_HEADER(XB3ParentSpanId, headers, h);
-    COPY_INLINE_HEADER(XB3Sampled, headers, h);
-    COPY_INLINE_HEADER(OtSpanContext, headers, h);
+    COPY_INLINE_HEADER(RequestId, tracing_headers, h);
+    COPY_INLINE_HEADER(XB3TraceId, tracing_headers, h);
+    COPY_INLINE_HEADER(XB3SpanId, tracing_headers, h);
+    COPY_INLINE_HEADER(XB3ParentSpanId, tracing_headers, h);
+    COPY_INLINE_HEADER(XB3Sampled, tracing_headers, h);
+    COPY_INLINE_HEADER(OtSpanContext, tracing_headers, h);
   }
 
   std::string body = "{\"requestId\":\"" + info.request_id_ +

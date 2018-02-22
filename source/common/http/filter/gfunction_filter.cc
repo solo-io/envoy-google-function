@@ -62,11 +62,8 @@ GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers,
   active_ = true;
   currentFunction_ = currentFunction->second;
 
-  headers.insertMethod().value().setReference(
-      Envoy::Http::Headers::get().MethodValues.Post);
-
-  headers.insertPath().value(functionUrlPath());
-  headers.insertHost().value(functionHostName());
+  request_headers_ = &headers;
+  Gfunctionfy();
 
   // Check if tracing is enabled
   const Envoy::Http::HeaderEntry *p = headers.XB3TraceId();
@@ -77,47 +74,29 @@ GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers,
     tracingEnabled_ = false;
   }
 
-  request_headers_ = &headers;
-
   logHeaders(headers);
 
   ENVOY_LOG(debug, "GFUNCTION: decodeHeaders called end = {}", end_stream);
 
-  return Envoy::Http::FilterHeadersStatus::StopIteration;
+  return Envoy::Http::FilterHeadersStatus::Continue;
 }
 
 Envoy::Http::FilterDataStatus
-GfunctionFilter::decodeData(Envoy::Buffer::Instance &data, bool end_stream) {
-
-  if (!active_) {
-    return Envoy::Http::FilterDataStatus::Continue;
-  }
-  // calc hash of data
-  ENVOY_LOG(debug, "GFUNCTION: decodeData called end = {} data = {}",
-            end_stream, data.length());
-
-  if (end_stream) {
-    Gfunctionfy();
-    request_headers_ = nullptr;
-    active_ = false;
-    return Envoy::Http::FilterDataStatus::Continue;
-  }
-  return Envoy::Http::FilterDataStatus::StopIterationAndBuffer;
+GfunctionFilter::decodeData(Envoy::Buffer::Instance &, bool) {
+  return Envoy::Http::FilterDataStatus::Continue;
 }
 
 void GfunctionFilter::Gfunctionfy() {
-  std::list<Envoy::Http::LowerCaseString> headers;
 
-  headers.push_back(Envoy::Http::LowerCaseString("host"));
-  headers.push_back(Envoy::Http::LowerCaseString("content-type"));
+  request_headers_->insertMethod().value().setReference(
+      Envoy::Http::Headers::get().MethodValues.Post);
+
+  request_headers_->insertPath().value(functionUrlPath());
+  request_headers_->insertHost().value(functionHostName());
 }
 
 Envoy::Http::FilterTrailersStatus
 GfunctionFilter::decodeTrailers(Envoy::Http::HeaderMap &) {
-  if (!active_) {
-    return Envoy::Http::FilterTrailersStatus::Continue;
-  }
-  Gfunctionfy();
   return Envoy::Http::FilterTrailersStatus::Continue;
 }
 
@@ -164,22 +143,12 @@ GfunctionFilter::encodeHeaders(Envoy::Http::HeaderMap &headers,
   } else {
     ENVOY_LOG(info, "GFUNCTION: Not storing cloud tracing info");
   }
-  return Envoy::Http::FilterHeadersStatus::StopIteration;
+  return Envoy::Http::FilterHeadersStatus::Continue;
 }
 
 Envoy::Http::FilterDataStatus
-GfunctionFilter::encodeData(Envoy::Buffer::Instance &, bool end_stream) {
-  ENVOY_LOG(debug, "GFUNCTION: encodeData called end = {}", end_stream);
-
-  if (!active_) {
-    return Envoy::Http::FilterDataStatus::Continue;
-  }
-  if (end_stream) {
-    request_headers_ = nullptr;
-    active_ = false;
-    return Envoy::Http::FilterDataStatus::Continue;
-  }
-  return Envoy::Http::FilterDataStatus::StopIterationAndBuffer;
+GfunctionFilter::encodeData(Envoy::Buffer::Instance &, bool) {
+  return Envoy::Http::FilterDataStatus::Continue;
 }
 
 Envoy::Http::FilterTrailersStatus
