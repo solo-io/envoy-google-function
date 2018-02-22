@@ -1,0 +1,21 @@
+licenses(["notice"])  # Apache 2
+
+load(
+    "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_cc_binary",
+    "envoy_cc_library",
+    "envoy_cc_test",
+    "envoy_package",
+)
+
+envoy_package()
+
+envoy_cc_library(
+    name = "gfunction_filter_config",
+    srcs = ["gfunction_filter_config.cc"],
+    repository = "@envoy",
+    deps = [
+        "//source/common/http/filter:gfunction_filter_lib",
+        "@envoy//source/exe:envoy_common_lib",
+    ],
+)
