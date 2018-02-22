@@ -10,7 +10,6 @@ load(
 
 envoy_package()
 
-
 envoy_cc_test(
     name = "gfunction_filter_integration_test",
     srcs = ["gfunction_filter_integration_test.cc"],
@@ -18,7 +17,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         "//source/server/config:gfunction_filter_config",
+        "@envoy//test/integration:http_integration_lib",
         "@envoy//test/integration:integration_lib",
-        "@envoy//test/integration:http_integration_lib"
     ],
 )
