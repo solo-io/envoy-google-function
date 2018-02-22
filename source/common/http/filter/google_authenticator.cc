@@ -3,11 +3,11 @@
 #include <vector>
 #include <list>
 
-#include "google_authenticator.h"
+#include "common/http/filter/google_authenticator.h"
 
 
-namespace Solo {
-namespace Gfunction {
+namespace Envoy {
+namespace Http {
 
 
 GoogleAuthenticator::GoogleAuthenticator(std::string&& access_key, std::string&& secret_key, std::string&& service) : 

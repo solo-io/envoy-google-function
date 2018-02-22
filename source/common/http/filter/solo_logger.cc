@@ -1,4 +1,4 @@
-#include "solo_logger.h"
+#include "common/http/filter/solo_logger.h"
 #include "server/config/network/http_connection_manager.h"
 
 #include "common/http/message_impl.h"
@@ -13,8 +13,8 @@
   if(from->name() != nullptr) \
     to->insert##name().value(std::string(from->name()->value().c_str()));
 
-namespace Solo {
-namespace Logger {
+namespace Envoy {
+namespace Http {
 
   CloudCollector::CloudCollector(Envoy::Upstream::ClusterManager& cm, CallbackerSharedPtr cb) :
     cm_(cm),
@@ -27,7 +27,7 @@ namespace Logger {
 
   CloudCollector::~CloudCollector() {}
 
-  void CloudCollector::storeRequestInfo(RequestInfo& info, Envoy::Http::HeaderMap* headers) {
+  void CloudCollector::storeRequestInfo(CloudCollector::RequestInfo& info, Envoy::Http::HeaderMap* headers) {
 
     Envoy::Http::MessagePtr request(new Envoy::Http::RequestMessageImpl());
     request->headers().insertContentType().value(std::string("application/json"));

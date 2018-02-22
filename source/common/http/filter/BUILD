@@ -17,7 +17,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "@envoy//source/exe:envoy_common_lib",
-    ],    
+    ],
 )
 
 envoy_cc_library(
@@ -36,8 +36,8 @@ envoy_cc_library(
     hdrs = ["gfunction_filter.h"],
     repository = "@envoy",
     deps = [
-        ":google_authenticator_lib",   
-        ":solo_logger_lib",     
+        ":google_authenticator_lib",
+        ":solo_logger_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

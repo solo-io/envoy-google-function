@@ -10,8 +10,8 @@
 #include "common/common/logger.h"
 
 
-namespace Solo {
-namespace Logger {
+namespace Envoy {
+namespace Http {
 
   // Class to provide required callbacks to the AsyncClient send method
   class Callbacker : public Envoy::Http::AsyncClient::Callbacks {
@@ -21,6 +21,9 @@ namespace Logger {
   };
   typedef std::shared_ptr<Callbacker> CallbackerSharedPtr;
   
+  class CloudCollector : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
+    public:
+
   struct RequestInfo {
     std::string request_id_;
     std::string function_name_;
@@ -29,12 +32,10 @@ namespace Logger {
     std::string provider_;
   };
 
-  class CloudCollector : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
-    public:
     CloudCollector(Envoy::Upstream::ClusterManager& cm, CallbackerSharedPtr cb);
     ~CloudCollector();
 
-    void storeRequestInfo(RequestInfo& info, Envoy::Http::HeaderMap* headers);
+    void storeRequestInfo(CloudCollector::RequestInfo& info, Envoy::Http::HeaderMap* headers);
     
     private:
     Envoy::Upstream::ClusterManager& cm_;

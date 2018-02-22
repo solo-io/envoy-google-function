@@ -3,8 +3,8 @@
 #include <string>
 
 
-namespace Solo {
-namespace Gfunction {
+namespace Envoy {
+namespace Http {
 
 class GoogleAuthenticator {
 public:

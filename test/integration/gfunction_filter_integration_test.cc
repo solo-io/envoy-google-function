@@ -3,7 +3,7 @@
 
 #include "test/integration/http_integration.h"
 
-namespace Solo {
+namespace Envoy {
 class GfunctionFilterIntegrationTest : public Envoy::HttpIntegrationTest,
                                         public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
 public:

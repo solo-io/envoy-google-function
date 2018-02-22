@@ -1,13 +1,13 @@
 #include <string>
 
-#include "gfunction_filter.h"
+#include "common/http/filter/gfunction_filter.h"
 
 #include "envoy/registry/registry.h"
 
-#include "solo_logger.h"
+#include "common/http/filter/solo_logger.h"
 
-namespace Solo {
-namespace Gfunction {
+namespace Envoy {
+namespace Server {
 namespace Configuration {
   
 const std::string gFUNCTION_HTTP_FILTER_SCHEMA(R"EOF(
@@ -50,9 +50,9 @@ public:
   const Envoy::Json::ObjectSharedPtr functions_obj = json_config.getObject("functions", false);
 
   //Solo::Logger::Callbacker cb;
-  Solo::Logger::CallbackerSharedPtr cb = std::make_shared<Solo::Logger::Callbacker>();
+  Http::CallbackerSharedPtr cb = std::make_shared<Http::Callbacker>();
 
-  Gfunction::ClusterFunctionMap functions;
+  Http::ClusterFunctionMap functions;
 
   functions_obj->iterate([&functions](const std::string& key, const Envoy::Json::Object& value){
     const std::string cluster_name = key;
@@ -60,7 +60,7 @@ public:
     const std::string hostname = value.getString("hostname", "");
     const std::string region = value.getString("region", "");
     const std::string project = value.getString("project", "");
-    functions[cluster_name] = Gfunction::Function {
+    functions[cluster_name] = Http::Function {
       .func_name_ = func_name,
       .hostname_ = hostname,
       .region_  = region,
@@ -69,8 +69,8 @@ public:
     return true;
   });
 
-    return [&context, cb, access_key, secret_key, functions](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
-      auto filter = new Gfunction::GfunctionFilter(
+    return [&context, cb, access_key, secret_key, functions](Http::FilterChainFactoryCallbacks& callbacks) -> void {
+      auto filter = new Http::GfunctionFilter(
         context.clusterManager(),
         std::move(cb), 
         std::move(access_key), 

@@ -8,11 +8,11 @@
 
 #include "common/common/logger.h"
 
-#include "google_authenticator.h"
-#include "solo_logger.h"
+#include "common/http/filter/google_authenticator.h"
+#include "common/http/filter/solo_logger.h"
 
-namespace Solo {
-namespace Gfunction {
+namespace Envoy {
+namespace Http {
 
 struct Function {
   std::string func_name_;
@@ -27,7 +27,8 @@ class GfunctionFilter :
         public Envoy::Http::StreamFilter, 
         public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 public:
-  GfunctionFilter(Envoy::Upstream::ClusterManager& cm, Solo::Logger::CallbackerSharedPtr cb, std::string access_key, std::string secret_key, ClusterFunctionMap functions);
+  GfunctionFilter(Envoy::Upstream::ClusterManager& cm, CallbackerSharedPtr
+   cb, std::string access_key, std::string secret_key, ClusterFunctionMap functions);
   ~GfunctionFilter();
 
   // Http::StreamFilterBase
@@ -44,7 +45,9 @@ public:
   Envoy::Http::FilterDataStatus encodeData(Envoy::Buffer::Instance&, bool) override;
   Envoy::Http::FilterTrailersStatus encodeTrailers(Envoy::Http::HeaderMap&) override;
   void setEncoderFilterCallbacks(Envoy::Http::StreamEncoderFilterCallbacks& callbacks) override;
-
+  FilterHeadersStatus encode100ContinueHeaders(HeaderMap&) override {
+    return Http::FilterHeadersStatus::Continue;     
+   }
 
 private:
   Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
@@ -62,7 +65,7 @@ private:
   bool tracingEnabled_;
   GoogleAuthenticator googleAuthenticator_;
 
-  Solo::Logger::CloudCollector collector_;
+  CloudCollector collector_;
 };
 
 } // Gfunction

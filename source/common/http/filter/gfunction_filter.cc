@@ -3,7 +3,7 @@
 #include <vector>
 #include <list>
 
-#include "gfunction_filter.h"
+#include "common/http/filter/gfunction_filter.h"
 
 #include "server/config/network/http_connection_manager.h"
 
@@ -13,12 +13,12 @@
 #include "common/common/empty_string.h"
 #include "common/common/utility.h"
 
-namespace Solo {
-namespace Gfunction {
+namespace Envoy {
+namespace Http {
 
 GfunctionFilter::GfunctionFilter(
     Envoy::Upstream::ClusterManager& cm, 
-    Solo::Logger::CallbackerSharedPtr cb,
+    CallbackerSharedPtr cb,
     std::string access_key, 
     std::string secret_key, 
     ClusterFunctionMap functions) :
@@ -147,7 +147,7 @@ Envoy::Http::FilterHeadersStatus GfunctionFilter::encodeHeaders(Envoy::Http::Hea
     const Envoy::Http::HeaderEntry* hdr = headers.get(
       Envoy::Http::LowerCaseString("function-execution-id"));
     if(hdr != nullptr) {
-      Solo::Logger::RequestInfo info;
+      CloudCollector::RequestInfo info;
       info.function_name_ = currentFunction_.func_name_;
       info.region_ = currentFunction_.region_;
       info.project_ = currentFunction_.project_;
