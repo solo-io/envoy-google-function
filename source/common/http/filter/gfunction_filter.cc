@@ -17,50 +17,65 @@ namespace Envoy {
 namespace Http {
 
 GfunctionFilter::GfunctionFilter(Envoy::Upstream::ClusterManager &cm,
-                                 CallbackerSharedPtr cb, std::string access_key,
-                                 std::string secret_key,
-                                 ClusterFunctionMap functions)
-    : functions_(std::move(functions)), active_(false), tracingEnabled_(false),
-      googleAuthenticator_(std::move(access_key), std::move(secret_key),
-                           std::string("Gfunction")),
-      collector_(cm, cb) {}
+                                 CallbackerSharedPtr cb)
+    : tracingEnabled_(false), collector_(cm, cb) {}
 
 GfunctionFilter::~GfunctionFilter() {}
 
 void GfunctionFilter::onDestroy() {}
 
-std::string GfunctionFilter::functionUrlPath() {
-  std::stringstream val;
-  val << "/" << currentFunction_.func_name_;
-  return val.str();
+Optional<const Protobuf::Value *>
+maybevalue(const Protobuf::Struct &spec,
+                                 const std::string &key) {
+  const auto &fields = spec.fields();
+  const auto fields_it = fields.find(key);
+  if (fields_it == fields.end()) {
+    return {};
+  }
+
+  const auto &value = fields_it->second;
+  return &value;
 }
 
-std::string GfunctionFilter::functionHostName() {
-  std::stringstream val;
-  val << currentFunction_.region_ << "-" << currentFunction_.project_ << "."
-      << currentFunction_.hostname_;
-  return val.str();
+// TODO(yuval-k): this is here only to see the e2e working; move to common asap.
+Optional<const std::string *> nonEmptyStringValue(const ProtobufWkt::Struct &spec,
+                                               const std::string &key) {
+
+  Optional<const Protobuf::Value *> maybe_value = maybevalue(spec, key);
+  if (!maybe_value.valid()) {
+    return {};
+  }
+  const auto &value = *maybe_value.value();
+  if (value.kind_case() != ProtobufWkt::Value::kStringValue) {
+    return {};
+  }
+
+  const auto &string_value = value.string_value();
+  if (string_value.empty()) {
+    return {};
+  }
+
+  return Optional<const std::string *>(&string_value);
+}
+
+bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
+  
+  
+  Optional<const ProtobufWkt::Struct *> maybe_function_spec = meta_accessor.getFunctionSpec();
+  if (!maybe_function_spec.valid()) {
+    return false;
+  }
+  const ProtobufWkt::Struct &function_spec = *maybe_function_spec.value();
+
+  host_ = nonEmptyStringValue(function_spec, "host");
+  path_ = nonEmptyStringValue(function_spec, "path");
+
+  return host_.valid() && path_.valid();
 }
 
 Envoy::Http::FilterHeadersStatus
 GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers,
-                               bool end_stream) {
-
-  const Envoy::Router::RouteEntry *routeEntry =
-      decoder_callbacks_->route()->routeEntry();
-
-  if (routeEntry == nullptr) {
-    return Envoy::Http::FilterHeadersStatus::Continue;
-  }
-
-  const std::string &cluster_name = routeEntry->clusterName();
-  ClusterFunctionMap::iterator currentFunction = functions_.find(cluster_name);
-  if (currentFunction == functions_.end()) {
-    return Envoy::Http::FilterHeadersStatus::Continue;
-  }
-
-  active_ = true;
-  currentFunction_ = currentFunction->second;
+                               bool) {
 
   request_headers_ = &headers;
   Gfunctionfy();
@@ -73,10 +88,6 @@ GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers,
   } else {
     tracingEnabled_ = false;
   }
-
-  logHeaders(headers);
-
-  ENVOY_LOG(debug, "GFUNCTION: decodeHeaders called end = {}", end_stream);
 
   return Envoy::Http::FilterHeadersStatus::Continue;
 }
@@ -91,8 +102,8 @@ void GfunctionFilter::Gfunctionfy() {
   request_headers_->insertMethod().value().setReference(
       Envoy::Http::Headers::get().MethodValues.Post);
 
-  request_headers_->insertPath().value(functionUrlPath());
-  request_headers_->insertHost().value(functionHostName());
+  request_headers_->insertPath().value().setReference(*path_.value());
+  request_headers_->insertHost().value().setReference(*host_.value());
 }
 
 Envoy::Http::FilterTrailersStatus
@@ -107,35 +118,18 @@ void GfunctionFilter::setDecoderFilterCallbacks(
 
 Envoy::Http::FilterHeadersStatus
 GfunctionFilter::encodeHeaders(Envoy::Http::HeaderMap &headers,
-                               bool end_stream) {
-  const Envoy::Router::RouteEntry *routeEntry =
-      encoder_callbacks_->route()->routeEntry();
-  ENVOY_LOG(debug, "GFUNCTION: encodeHeaders called end = {}", end_stream);
-  if (routeEntry == nullptr) {
-    return Envoy::Http::FilterHeadersStatus::Continue;
-  }
+                               bool) {
 
-  const std::string &cluster_name = routeEntry->clusterName();
-  ClusterFunctionMap::iterator currentFunction = functions_.find(cluster_name);
-  if (currentFunction == functions_.end()) {
-    return Envoy::Http::FilterHeadersStatus::Continue;
-  }
-
-  active_ = true;
-  currentFunction_ = currentFunction->second;
-
-  logHeaders(headers);
   request_headers_ = &headers;
 
   if (tracingEnabled_) {
-    ENVOY_LOG(info, "GFUNCTION: Storing cloud tracing info");
     const Envoy::Http::HeaderEntry *hdr =
         headers.get(Envoy::Http::LowerCaseString("function-execution-id"));
     if (hdr != nullptr) {
       CloudCollector::RequestInfo info;
-      info.function_name_ = currentFunction_.func_name_;
-      info.region_ = currentFunction_.region_;
-      info.project_ = currentFunction_.project_;
+      info.function_name_ = *path_.value();
+      info.region_ = *host_.value();
+      info.project_ = *host_.value();
       info.provider_ = "google";
       info.request_id_ = hdr->value().c_str();
       collector_.storeRequestInfo(info, tracing_headers_);
@@ -161,17 +155,6 @@ void GfunctionFilter::setEncoderFilterCallbacks(
   encoder_callbacks_ = &callbacks;
 }
 
-void GfunctionFilter::logHeaders(Envoy::Http::HeaderMap &headers) {
-  // Print all headers - DEBUG
-  headers.iterate(
-      [](const Envoy::Http::HeaderEntry &header,
-         void *) -> Envoy::Http::HeaderMap::Iterate {
-        ENVOY_LOG(debug, "GFUNCTION: '{}':'{}'", header.key().c_str(),
-                  header.value().c_str());
-        return Envoy::Http::HeaderMap::Iterate::Continue;
-      },
-      this);
-}
 
 } // namespace Http
 } // namespace Envoy

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package envoy.api.v2.filter.http;
+
+// Lambda :ref:`configuration overview <config_http_filters_lambda>`.
+
+// [#proto-status: experimental]
+message GoogleFunc {
+}

@@ -38,6 +38,7 @@ envoy_cc_library(
     deps = [
         ":google_authenticator_lib",
         ":solo_logger_lib",
+        "@envoy_common//source/common/http:functional_stream_decoder_base_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

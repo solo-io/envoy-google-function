@@ -12,6 +12,11 @@ envoy_package()
 
 load("@envoy_api//bazel:api_build_system.bzl", "api_proto_library")
 
+api_proto_library(
+    name = "google_func_filter_proto",
+    srcs = ["google_func_filter.proto"],
+)
+
 envoy_cc_library(
     name = "filter_lib",
     repository = "@envoy",
