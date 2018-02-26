@@ -15,6 +15,6 @@ ENVOY=${ENVOY:-envoy}
 $ENVOY -c ./envoy.yaml --log-level debug & 
 sleep 5
 
-curl localhost:10000/googs --data '{"message": "Hello!"}' --request POST -H"content-type: application/json"|grep abc
+curl -v localhost:10000/googs --data '{"message": "solo.io"}' --request POST -H"content-type: application/json"|grep SOLO.IO
 
 echo PASS
