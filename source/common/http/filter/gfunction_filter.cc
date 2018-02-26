@@ -11,6 +11,8 @@
 #include "common/common/hex.h"
 #include "common/common/utility.h"
 
+#include "common/config/gfunction_well_known_names.h"
+
 #include "server/config/network/http_connection_manager.h"
 
 namespace Envoy {
@@ -59,16 +61,15 @@ Optional<const std::string *> nonEmptyStringValue(const ProtobufWkt::Struct &spe
 }
 
 bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
-  
-  
+
   Optional<const ProtobufWkt::Struct *> maybe_function_spec = meta_accessor.getFunctionSpec();
   if (!maybe_function_spec.valid()) {
     return false;
   }
   const ProtobufWkt::Struct &function_spec = *maybe_function_spec.value();
 
-  host_ = nonEmptyStringValue(function_spec, "host");
-  path_ = nonEmptyStringValue(function_spec, "path");
+  host_ = nonEmptyStringValue(function_spec, Config::MetadataGFunctionKeys::get().HOST);
+  path_ = nonEmptyStringValue(function_spec, Config::MetadataGFunctionKeys::get().PATH);
 
   return host_.valid() && path_.valid();
 }
@@ -76,7 +77,6 @@ bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
 Envoy::Http::FilterHeadersStatus
 GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers,
                                bool) {
-
   request_headers_ = &headers;
   Gfunctionfy();
 
@@ -119,7 +119,6 @@ void GfunctionFilter::setDecoderFilterCallbacks(
 Envoy::Http::FilterHeadersStatus
 GfunctionFilter::encodeHeaders(Envoy::Http::HeaderMap &headers,
                                bool) {
-
   request_headers_ = &headers;
 
   if (tracingEnabled_) {

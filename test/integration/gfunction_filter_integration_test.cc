@@ -1,8 +1,16 @@
 #include "test/integration/http_integration.h"
 #include "test/integration/integration.h"
 #include "test/integration/utility.h"
+#include "common/config/gfunction_well_known_names.h"
+#include "common/config/metadata.h"
 
 namespace Envoy {
+
+const std::string DEFAULT_LAMBDA_FILTER =
+    R"EOF(
+name: io.solo.gcloudfunc
+)EOF";
+
 class GfunctionFilterIntegrationTest
     : public Envoy::HttpIntegrationTest,
       public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
@@ -10,60 +18,104 @@ public:
   GfunctionFilterIntegrationTest()
       : Envoy::HttpIntegrationTest(Envoy::Http::CodecClient::Type::HTTP1,
                                    GetParam()) {}
+
   /**
    * Initializer for an individual integration test.
    */
-  void SetUp() override {
+  void initialize() override {
+    config_helper_.addFilter(DEFAULT_LAMBDA_FILTER);
 
-    fake_upstreams_.emplace_back(new Envoy::FakeUpstream(
-        0, Envoy::FakeHttpConnection::Type::HTTP1, version_));
-    registerPort("upstream_0",
-                 fake_upstreams_.back()->localAddress()->ip()->port());
-    createTestServer("envoy-test.conf", {"http"});
+    config_helper_.addConfigModifier(
+        [](envoy::config::bootstrap::v2::Bootstrap &bootstrap) {
+          auto &google_cluster =
+              (*bootstrap.mutable_static_resources()->mutable_clusters(0));
+
+          auto *metadata = google_cluster.mutable_metadata();
+
+          // create some value to mark this cluster as gfunction.
+          Config::Metadata::mutableMetadataValue(
+              *metadata, Config::GFunctionMetadataFilters::get().GFUNCTION,
+              Config::MetadataGFunctionKeys::get().HOST)
+              .set_string_value("dummy value");
+
+          /////
+          // TODO(yuval-k): use consts (filename mess)
+          std::string functionalfilter = "io.solo.function_router";
+          std::string functionsKey = "functions";
+
+          // add the function spec in the cluster config.
+          // TODO(yuval-k): extract this to help method (test utils?)
+          ProtobufWkt::Struct *functionstruct =
+              Config::Metadata::mutableMetadataValue(
+                  *metadata, functionalfilter, functionsKey)
+                  .mutable_struct_value();
+
+          ProtobufWkt::Value &functionstructspecvalue =
+              (*functionstruct->mutable_fields())["funcname"];
+          ProtobufWkt::Struct *functionsspecstruct =
+              functionstructspecvalue.mutable_struct_value();
+
+          (*functionsspecstruct
+                ->mutable_fields())[Config::MetadataGFunctionKeys::get().HOST]
+              .set_string_value("us-central1-some-project-id.cloudfunctions.net");
+          (*functionsspecstruct->mutable_fields())
+              [Config::MetadataGFunctionKeys::get().PATH]
+                  .set_string_value("/function-1");
+        });
+
+    config_helper_.addConfigModifier(
+        [](envoy::config::filter::network::http_connection_manager::v2::
+               HttpConnectionManager &hcm) {
+          auto *metadata = hcm.mutable_route_config()
+                               ->mutable_virtual_hosts(0)
+                               ->mutable_routes(0)
+                               ->mutable_metadata();
+          std::string functionalfilter = "io.solo.function_router";
+          std::string functionKey = "function";
+          std::string clustername =
+              hcm.route_config().virtual_hosts(0).routes(0).route().cluster();
+
+          ProtobufWkt::Struct *clusterstruct =
+              Config::Metadata::mutableMetadataValue(
+                  *metadata, functionalfilter, clustername)
+                  .mutable_struct_value();
+
+          (*clusterstruct->mutable_fields())[functionKey].set_string_value(
+              "funcname");
+        });
+
+    HttpIntegrationTest::initialize();
+
+    codec_client_ =
+        makeHttpConnection(makeClientConnection((lookupPort("http"))));
   }
 
   /**
-   * Destructor for an individual integration test.
+   * Initializer for an individual integration test.
    */
-  void TearDown() override {
-    test_server_.reset();
-    fake_upstreams_.clear();
-  }
+  void SetUp() override { initialize(); }
+
 };
 
 INSTANTIATE_TEST_CASE_P(
     IpVersions, GfunctionFilterIntegrationTest,
     testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()));
 
-TEST_P(GfunctionFilterIntegrationTest, Test1) {
 
-  Envoy::Http::TestHeaderMapImpl headers{
+TEST_P(GfunctionFilterIntegrationTest, Test1) {
+  Envoy::Http::TestHeaderMapImpl request_headers{
       {":method", "POST"}, {":authority", "www.solo.io"}, {":path", "/"}};
 
-  Envoy::IntegrationCodecClientPtr codec_client;
-  Envoy::FakeHttpConnectionPtr fake_upstream_connection;
-  Envoy::IntegrationStreamDecoderPtr response(
-      new Envoy::IntegrationStreamDecoder(*dispatcher_));
-  Envoy::FakeStreamPtr request_stream;
+  sendRequestAndWaitForResponse(request_headers, 10, default_response_headers_,
+                                10);
 
-  codec_client = makeHttpConnection(lookupPort("http"));
-  Envoy::Http::StreamEncoder &stream =
-      codec_client->startRequest(headers, *response);
-  Envoy::Buffer::OwnedImpl data;
-  data.add(std::string("{\"a\":123}"));
-  codec_client->sendData(stream, data, true);
+  std::string path  = upstream_request_->headers().Path()
+                   ->value().c_str();
+  std::string host  = upstream_request_->headers().Host()
+                   ->value().c_str();
 
-  fake_upstream_connection =
-      fake_upstreams_[0]->waitForHttpConnection(*dispatcher_);
-  request_stream = fake_upstream_connection->waitForNewStream(*dispatcher_);
-  request_stream->waitForEndStream(*dispatcher_);
-  response->waitForEndStream();
-
-  EXPECT_NE(0, request_stream->headers()
-                   .get(Envoy::Http::LowerCaseString("authorization"))
-                   ->value()
-                   .size());
-
-  codec_client->close();
+  EXPECT_EQ("us-central1-some-project-id.cloudfunctions.net", host);
+  EXPECT_EQ("/function-1", path);
 }
+
 } // namespace Envoy

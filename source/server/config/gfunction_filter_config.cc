@@ -4,12 +4,17 @@
 
 #include "common/http/filter/gfunction_filter.h"
 #include "common/http/filter/solo_logger.h"
+#include "common/config/gfunction_well_known_names.h"
+
+#include "common/http/functional_stream_decoder_base.h"
 
 #include "google_func_filter.pb.validate.h"
 
 namespace Envoy {
 namespace Server {
 namespace Configuration {
+
+typedef Http::FunctionalFilterMixin<Http::GfunctionFilter> MixedGFunctionFilter;
 
 class GfunctionFilterFactory
     : public Envoy::Server::Configuration::NamedHttpFilterConfigFactory {
@@ -37,12 +42,12 @@ HttpFilterFactoryCb createFilterFactoryFromProto(
     Http::CallbackerSharedPtr cb = std::make_shared<Http::Callbacker>();
 
     return [&context, cb](Http::FilterChainFactoryCallbacks &callbacks) -> void {
-      auto filter = new Http::GfunctionFilter(
+      auto filter = new MixedGFunctionFilter( context, Config::GFunctionFilterNames::get().GFUNCTION,
           context.clusterManager(), cb);
       callbacks.addStreamFilter(Envoy::Http::StreamFilterSharedPtr{filter});
     };
 }
-  std::string name() override { return "io.solo.gcloudfunc"; }
+  std::string name() override { return Config::GFunctionFilterNames::get().GFUNCTION; }
 };
 
 /**
