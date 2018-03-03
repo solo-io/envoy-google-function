@@ -10,7 +10,6 @@
 #include "common/common/empty_string.h"
 #include "common/common/hex.h"
 #include "common/common/utility.h"
-
 #include "common/config/gfunction_well_known_names.h"
 
 #include "server/config/network/http_connection_manager.h"
@@ -26,9 +25,8 @@ GfunctionFilter::~GfunctionFilter() {}
 
 void GfunctionFilter::onDestroy() {}
 
-Optional<const Protobuf::Value *>
-maybevalue(const Protobuf::Struct &spec,
-                                 const std::string &key) {
+Optional<const Protobuf::Value *> maybevalue(const Protobuf::Struct &spec,
+                                             const std::string &key) {
   const auto &fields = spec.fields();
   const auto fields_it = fields.find(key);
   if (fields_it == fields.end()) {
@@ -40,8 +38,8 @@ maybevalue(const Protobuf::Struct &spec,
 }
 
 // TODO(yuval-k): this is here only to see the e2e working; move to common asap.
-Optional<const std::string *> nonEmptyStringValue(const ProtobufWkt::Struct &spec,
-                                               const std::string &key) {
+Optional<const std::string *>
+nonEmptyStringValue(const ProtobufWkt::Struct &spec, const std::string &key) {
 
   Optional<const Protobuf::Value *> maybe_value = maybevalue(spec, key);
   if (!maybe_value.valid()) {
@@ -62,21 +60,23 @@ Optional<const std::string *> nonEmptyStringValue(const ProtobufWkt::Struct &spe
 
 bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
 
-  Optional<const ProtobufWkt::Struct *> maybe_function_spec = meta_accessor.getFunctionSpec();
+  Optional<const ProtobufWkt::Struct *> maybe_function_spec =
+      meta_accessor.getFunctionSpec();
   if (!maybe_function_spec.valid()) {
     return false;
   }
   const ProtobufWkt::Struct &function_spec = *maybe_function_spec.value();
 
-  host_ = nonEmptyStringValue(function_spec, Config::MetadataGFunctionKeys::get().HOST);
-  path_ = nonEmptyStringValue(function_spec, Config::MetadataGFunctionKeys::get().PATH);
+  host_ = nonEmptyStringValue(function_spec,
+                              Config::MetadataGFunctionKeys::get().HOST);
+  path_ = nonEmptyStringValue(function_spec,
+                              Config::MetadataGFunctionKeys::get().PATH);
 
   return host_.valid() && path_.valid();
 }
 
 Envoy::Http::FilterHeadersStatus
-GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers,
-                               bool) {
+GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers, bool) {
   request_headers_ = &headers;
   Gfunctionfy();
 
@@ -117,8 +117,7 @@ void GfunctionFilter::setDecoderFilterCallbacks(
 }
 
 Envoy::Http::FilterHeadersStatus
-GfunctionFilter::encodeHeaders(Envoy::Http::HeaderMap &headers,
-                               bool) {
+GfunctionFilter::encodeHeaders(Envoy::Http::HeaderMap &headers, bool) {
   request_headers_ = &headers;
 
   if (tracingEnabled_) {
@@ -153,7 +152,6 @@ void GfunctionFilter::setEncoderFilterCallbacks(
     Envoy::Http::StreamEncoderFilterCallbacks &callbacks) {
   encoder_callbacks_ = &callbacks;
 }
-
 
 } // namespace Http
 } // namespace Envoy

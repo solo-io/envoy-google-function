@@ -5,9 +5,9 @@ namespace Http {
 
 Optional<GFunction>
 GFunction::createFunction(Optional<const std::string *> name,
-                         Optional<const std::string *> host,
-                         Optional<const std::string *> region,
-                         Optional<const std::string *> project_) {
+                          Optional<const std::string *> host,
+                          Optional<const std::string *> region,
+                          Optional<const std::string *> project_) {
   if (!name.valid()) {
     return {};
   }

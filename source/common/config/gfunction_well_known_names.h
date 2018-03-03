@@ -39,7 +39,6 @@ class MetadataGFunctionKeyValues {
 public:
   const std::string HOST = "host";
   const std::string PATH = "path";
-
 };
 
 typedef ConstSingleton<MetadataGFunctionKeyValues> MetadataGFunctionKeys;
