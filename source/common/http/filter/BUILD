@@ -39,7 +39,7 @@ envoy_cc_library(
         ":google_authenticator_lib",
         ":solo_logger_lib",
         "//source/common/config:gfunction_well_known_names_lib",        
-        "@envoy_common//source/common/http:functional_stream_decoder_base_lib",
+        "@solo_envoy_common//source/common/http:functional_stream_decoder_base_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )
