@@ -1,0 +1,12 @@
+site_name: Envoy Google Cloud Functions HTTP Filter
+pages:
+    - Envoy Google Cloud Functions HTTP filter documentation: index.md
+    - Configuration reference:
+        - HTTP filters:
+            - Google Cloud Functions: root/configuration/http_filters/gfunction_filter.md
+repo_url: https://github.com/solo-io/envoy-google-function/
+site_author: envoy-google-function Project Authors
+copyright: © Copyright 2018, envoy-google-function Project Authors
+theme: readthedocs
+extra_css: [extra.css]
+version: 1.0
