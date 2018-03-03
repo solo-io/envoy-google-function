@@ -17,7 +17,7 @@
 namespace Envoy {
 namespace Http {
 
-GfunctionFilter::GfunctionFilter(Envoy::Upstream::ClusterManager &cm,
+GfunctionFilter::GfunctionFilter(Upstream::ClusterManager &cm,
                                  CallbackerSharedPtr cb)
     : tracingEnabled_(false), collector_(cm, cb) {}
 
@@ -75,13 +75,12 @@ bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
   return host_.valid() && path_.valid();
 }
 
-Envoy::Http::FilterHeadersStatus
-GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers, bool) {
+FilterHeadersStatus GfunctionFilter::decodeHeaders(HeaderMap &headers, bool) {
   request_headers_ = &headers;
   Gfunctionfy();
 
   // Check if tracing is enabled
-  const Envoy::Http::HeaderEntry *p = headers.XB3TraceId();
+  const HeaderEntry *p = headers.XB3TraceId();
   if (p != NULL) {
     tracingEnabled_ = true;
     tracing_headers_ = &headers;
@@ -89,40 +88,37 @@ GfunctionFilter::decodeHeaders(Envoy::Http::HeaderMap &headers, bool) {
     tracingEnabled_ = false;
   }
 
-  return Envoy::Http::FilterHeadersStatus::Continue;
+  return FilterHeadersStatus::Continue;
 }
 
-Envoy::Http::FilterDataStatus
-GfunctionFilter::decodeData(Envoy::Buffer::Instance &, bool) {
-  return Envoy::Http::FilterDataStatus::Continue;
+FilterDataStatus GfunctionFilter::decodeData(Buffer::Instance &, bool) {
+  return FilterDataStatus::Continue;
 }
 
 void GfunctionFilter::Gfunctionfy() {
 
   request_headers_->insertMethod().value().setReference(
-      Envoy::Http::Headers::get().MethodValues.Post);
+      Headers::get().MethodValues.Post);
 
   request_headers_->insertPath().value().setReference(*path_.value());
   request_headers_->insertHost().value().setReference(*host_.value());
 }
 
-Envoy::Http::FilterTrailersStatus
-GfunctionFilter::decodeTrailers(Envoy::Http::HeaderMap &) {
-  return Envoy::Http::FilterTrailersStatus::Continue;
+FilterTrailersStatus GfunctionFilter::decodeTrailers(HeaderMap &) {
+  return FilterTrailersStatus::Continue;
 }
 
 void GfunctionFilter::setDecoderFilterCallbacks(
-    Envoy::Http::StreamDecoderFilterCallbacks &callbacks) {
+    StreamDecoderFilterCallbacks &callbacks) {
   decoder_callbacks_ = &callbacks;
 }
 
-Envoy::Http::FilterHeadersStatus
-GfunctionFilter::encodeHeaders(Envoy::Http::HeaderMap &headers, bool) {
+FilterHeadersStatus GfunctionFilter::encodeHeaders(HeaderMap &headers, bool) {
   request_headers_ = &headers;
 
   if (tracingEnabled_) {
-    const Envoy::Http::HeaderEntry *hdr =
-        headers.get(Envoy::Http::LowerCaseString("function-execution-id"));
+    const HeaderEntry *hdr =
+        headers.get(LowerCaseString("function-execution-id"));
     if (hdr != nullptr) {
       CloudCollector::RequestInfo info;
       info.function_name_ = *path_.value();
@@ -135,21 +131,19 @@ GfunctionFilter::encodeHeaders(Envoy::Http::HeaderMap &headers, bool) {
   } else {
     ENVOY_LOG(info, "GFUNCTION: Not storing cloud tracing info");
   }
-  return Envoy::Http::FilterHeadersStatus::Continue;
+  return FilterHeadersStatus::Continue;
 }
 
-Envoy::Http::FilterDataStatus
-GfunctionFilter::encodeData(Envoy::Buffer::Instance &, bool) {
-  return Envoy::Http::FilterDataStatus::Continue;
+FilterDataStatus GfunctionFilter::encodeData(Buffer::Instance &, bool) {
+  return FilterDataStatus::Continue;
 }
 
-Envoy::Http::FilterTrailersStatus
-GfunctionFilter::encodeTrailers(Envoy::Http::HeaderMap &) {
-  return Envoy::Http::FilterTrailersStatus::Continue;
+FilterTrailersStatus GfunctionFilter::encodeTrailers(HeaderMap &) {
+  return FilterTrailersStatus::Continue;
 }
 
 void GfunctionFilter::setEncoderFilterCallbacks(
-    Envoy::Http::StreamEncoderFilterCallbacks &callbacks) {
+    StreamEncoderFilterCallbacks &callbacks) {
   encoder_callbacks_ = &callbacks;
 }
 

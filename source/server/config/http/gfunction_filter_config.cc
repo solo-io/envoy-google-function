@@ -15,12 +15,11 @@ namespace Configuration {
 
 typedef Http::FunctionalFilterMixin<Http::GfunctionFilter> MixedGFunctionFilter;
 
-class GfunctionFilterFactory
-    : public Envoy::Server::Configuration::NamedHttpFilterConfigFactory {
+class GfunctionFilterFactory : public NamedHttpFilterConfigFactory {
 public:
-  Envoy::Server::Configuration::HttpFilterFactoryCb
-  createFilterFactory(const Envoy::Json::Object &, const std::string &,
-                      Envoy::Server::Configuration::FactoryContext &) override {
+  HttpFilterFactoryCb createFilterFactory(const Json::Object &,
+                                          const std::string &,
+                                          FactoryContext &) override {
     NOT_IMPLEMENTED;
   }
 
@@ -47,7 +46,7 @@ public:
           auto filter = new MixedGFunctionFilter(
               context, Config::GFunctionFilterNames::get().GFUNCTION,
               context.clusterManager(), cb);
-          callbacks.addStreamFilter(Envoy::Http::StreamFilterSharedPtr{filter});
+          callbacks.addStreamFilter(Http::StreamFilterSharedPtr{filter});
         };
   }
   std::string name() override {
@@ -58,9 +57,8 @@ public:
 /**
  * Static registration for this sample filter. @see RegisterFactory.
  */
-static Envoy::Registry::RegisterFactory<
-    GfunctionFilterFactory,
-    Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
+static Registry::RegisterFactory<GfunctionFilterFactory,
+                                 NamedHttpFilterConfigFactory>
     register_;
 
 } // namespace Configuration

@@ -16,7 +16,7 @@
 namespace Envoy {
 namespace Http {
 
-CloudCollector::CloudCollector(Envoy::Upstream::ClusterManager &cm,
+CloudCollector::CloudCollector(Upstream::ClusterManager &cm,
                                CallbackerSharedPtr cb)
     : cm_(cm), callbacks_(cb), delay_timer_(nullptr), cluster_name_("sololog"),
       timeout_(std::chrono::milliseconds(1000)), retry_count_(0),
@@ -25,16 +25,16 @@ CloudCollector::CloudCollector(Envoy::Upstream::ClusterManager &cm,
 CloudCollector::~CloudCollector() {}
 
 void CloudCollector::storeRequestInfo(CloudCollector::RequestInfo &info,
-                                      Envoy::Http::HeaderMap *tracing_headers) {
+                                      HeaderMap *tracing_headers) {
 
-  Envoy::Http::MessagePtr request(new Envoy::Http::RequestMessageImpl());
+  MessagePtr request(new RequestMessageImpl());
   request->headers().insertContentType().value(std::string("application/json"));
   request->headers().insertPath().value(std::string("/api/v1/store"));
   request->headers().insertHost().value(std::string("sololog"));
   request->headers().insertMethod().value(std::string("POST"));
 
   if (tracing_headers != nullptr) {
-    Envoy::Http::HeaderMap *h = &(request->headers());
+    HeaderMap *h = &(request->headers());
     COPY_INLINE_HEADER(RequestId, tracing_headers, h);
     COPY_INLINE_HEADER(XB3TraceId, tracing_headers, h);
     COPY_INLINE_HEADER(XB3SpanId, tracing_headers, h);
@@ -49,7 +49,7 @@ void CloudCollector::storeRequestInfo(CloudCollector::RequestInfo &info,
                      info.project_ + "\",\"provider\":\"" + info.provider_ +
                      "\"}";
 
-  request->body().reset(new Envoy::Buffer::OwnedImpl(body));
+  request->body().reset(new Buffer::OwnedImpl(body));
 
   in_flight_request_ =
       cm_.httpAsyncClientForCluster(cluster_name_)
