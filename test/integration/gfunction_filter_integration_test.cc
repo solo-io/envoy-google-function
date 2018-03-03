@@ -1,8 +1,9 @@
+#include "common/config/gfunction_well_known_names.h"
+#include "common/config/metadata.h"
+
 #include "test/integration/http_integration.h"
 #include "test/integration/integration.h"
 #include "test/integration/utility.h"
-#include "common/config/gfunction_well_known_names.h"
-#include "common/config/metadata.h"
 
 namespace Envoy {
 
@@ -57,10 +58,11 @@ public:
 
           (*functionsspecstruct
                 ->mutable_fields())[Config::MetadataGFunctionKeys::get().HOST]
-              .set_string_value("us-central1-some-project-id.cloudfunctions.net");
-          (*functionsspecstruct->mutable_fields())
-              [Config::MetadataGFunctionKeys::get().PATH]
-                  .set_string_value("/function-1");
+              .set_string_value(
+                  "us-central1-some-project-id.cloudfunctions.net");
+          (*functionsspecstruct
+                ->mutable_fields())[Config::MetadataGFunctionKeys::get().PATH]
+              .set_string_value("/function-1");
         });
 
     config_helper_.addConfigModifier(
@@ -94,13 +96,11 @@ public:
    * Initializer for an individual integration test.
    */
   void SetUp() override { initialize(); }
-
 };
 
 INSTANTIATE_TEST_CASE_P(
     IpVersions, GfunctionFilterIntegrationTest,
     testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()));
-
 
 TEST_P(GfunctionFilterIntegrationTest, Test1) {
   Envoy::Http::TestHeaderMapImpl request_headers{
@@ -109,10 +109,8 @@ TEST_P(GfunctionFilterIntegrationTest, Test1) {
   sendRequestAndWaitForResponse(request_headers, 10, default_response_headers_,
                                 10);
 
-  std::string path  = upstream_request_->headers().Path()
-                   ->value().c_str();
-  std::string host  = upstream_request_->headers().Host()
-                   ->value().c_str();
+  std::string path = upstream_request_->headers().Path()->value().c_str();
+  std::string host = upstream_request_->headers().Host()->value().c_str();
 
   EXPECT_EQ("us-central1-some-project-id.cloudfunctions.net", host);
   EXPECT_EQ("/function-1", path);

@@ -26,7 +26,7 @@ typedef std::map<std::string, Function> ClusterFunctionMap;
 
 class GfunctionFilter
     : public Envoy::Http::StreamFilter,
-      public FunctionalFilter ,
+      public FunctionalFilter,
       public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 public:
   GfunctionFilter(Envoy::Upstream::ClusterManager &cm, CallbackerSharedPtr cb);
@@ -57,24 +57,22 @@ public:
   FilterHeadersStatus encode100ContinueHeaders(HeaderMap &) override {
     return Http::FilterHeadersStatus::Continue;
   }
-  
+
   // Http::FunctionRetriever
   bool retrieveFunction(const MetadataAccessor &meta_accessor) override;
 
 private:
   Envoy::Http::StreamDecoderFilterCallbacks *decoder_callbacks_;
   Envoy::Http::StreamEncoderFilterCallbacks *encoder_callbacks_;
-  
+
   Optional<const std::string *> host_;
   Optional<const std::string *> path_;
-  
+
   void Gfunctionfy();
-
-
 
   Envoy::Http::HeaderMap *request_headers_{};
   Envoy::Http::HeaderMap *tracing_headers_{};
-  
+
   bool active_;
 
   bool tracingEnabled_;
