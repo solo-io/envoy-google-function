@@ -24,54 +24,48 @@ struct Function {
 
 typedef std::map<std::string, Function> ClusterFunctionMap;
 
-class GfunctionFilter
-    : public Envoy::Http::StreamFilter,
-      public FunctionalFilter,
-      public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
+class GfunctionFilter : public StreamFilter,
+                        public FunctionalFilter,
+                        public Logger::Loggable<Logger::Id::filter> {
 public:
-  GfunctionFilter(Envoy::Upstream::ClusterManager &cm, CallbackerSharedPtr cb);
+  GfunctionFilter(Upstream::ClusterManager &cm, CallbackerSharedPtr cb);
   ~GfunctionFilter();
 
   // Http::StreamFilterBase
   void onDestroy() override;
 
   // Http::StreamDecoderFilter
-  Envoy::Http::FilterHeadersStatus
-  decodeHeaders(Envoy::Http::HeaderMap &headers, bool) override;
-  Envoy::Http::FilterDataStatus decodeData(Envoy::Buffer::Instance &,
-                                           bool) override;
-  Envoy::Http::FilterTrailersStatus
-  decodeTrailers(Envoy::Http::HeaderMap &) override;
-  void setDecoderFilterCallbacks(
-      Envoy::Http::StreamDecoderFilterCallbacks &callbacks) override;
+  FilterHeadersStatus decodeHeaders(HeaderMap &headers, bool) override;
+  FilterDataStatus decodeData(Buffer::Instance &, bool) override;
+  FilterTrailersStatus decodeTrailers(HeaderMap &) override;
+  void
+  setDecoderFilterCallbacks(StreamDecoderFilterCallbacks &callbacks) override;
 
   // Http::StreamEncoderFilter
-  Envoy::Http::FilterHeadersStatus
-  encodeHeaders(Envoy::Http::HeaderMap &headers, bool) override;
-  Envoy::Http::FilterDataStatus encodeData(Envoy::Buffer::Instance &,
-                                           bool) override;
-  Envoy::Http::FilterTrailersStatus
-  encodeTrailers(Envoy::Http::HeaderMap &) override;
-  void setEncoderFilterCallbacks(
-      Envoy::Http::StreamEncoderFilterCallbacks &callbacks) override;
+  FilterHeadersStatus encodeHeaders(HeaderMap &headers, bool) override;
+  FilterDataStatus encodeData(Buffer::Instance &, bool) override;
+  FilterTrailersStatus encodeTrailers(HeaderMap &) override;
+  void
+  setEncoderFilterCallbacks(StreamEncoderFilterCallbacks &callbacks) override;
+
   FilterHeadersStatus encode100ContinueHeaders(HeaderMap &) override {
-    return Http::FilterHeadersStatus::Continue;
+    return FilterHeadersStatus::Continue;
   }
 
   // Http::FunctionRetriever
   bool retrieveFunction(const MetadataAccessor &meta_accessor) override;
 
 private:
-  Envoy::Http::StreamDecoderFilterCallbacks *decoder_callbacks_;
-  Envoy::Http::StreamEncoderFilterCallbacks *encoder_callbacks_;
+  StreamDecoderFilterCallbacks *decoder_callbacks_;
+  StreamEncoderFilterCallbacks *encoder_callbacks_;
 
   Optional<const std::string *> host_;
   Optional<const std::string *> path_;
 
   void Gfunctionfy();
 
-  Envoy::Http::HeaderMap *request_headers_{};
-  Envoy::Http::HeaderMap *tracing_headers_{};
+  HeaderMap *request_headers_{};
+  HeaderMap *tracing_headers_{};
 
   bool active_;
 

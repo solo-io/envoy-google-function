@@ -7,24 +7,23 @@
 
 namespace Envoy {
 
-const std::string DEFAULT_LAMBDA_FILTER =
+const std::string DEFAULT_GFUNCTION_FILTER =
     R"EOF(
 name: io.solo.gcloudfunc
 )EOF";
 
 class GfunctionFilterIntegrationTest
-    : public Envoy::HttpIntegrationTest,
-      public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
+    : public HttpIntegrationTest,
+      public testing::TestWithParam<Network::Address::IpVersion> {
 public:
   GfunctionFilterIntegrationTest()
-      : Envoy::HttpIntegrationTest(Envoy::Http::CodecClient::Type::HTTP1,
-                                   GetParam()) {}
+      : HttpIntegrationTest(Http::CodecClient::Type::HTTP1, GetParam()) {}
 
   /**
    * Initializer for an individual integration test.
    */
   void initialize() override {
-    config_helper_.addFilter(DEFAULT_LAMBDA_FILTER);
+    config_helper_.addFilter(DEFAULT_GFUNCTION_FILTER);
 
     config_helper_.addConfigModifier(
         [](envoy::config::bootstrap::v2::Bootstrap &bootstrap) {
@@ -100,10 +99,10 @@ public:
 
 INSTANTIATE_TEST_CASE_P(
     IpVersions, GfunctionFilterIntegrationTest,
-    testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()));
+    testing::ValuesIn(TestEnvironment::getIpVersionsForTest()));
 
 TEST_P(GfunctionFilterIntegrationTest, Test1) {
-  Envoy::Http::TestHeaderMapImpl request_headers{
+  Http::TestHeaderMapImpl request_headers{
       {":method", "POST"}, {":authority", "www.solo.io"}, {":path", "/"}};
 
   sendRequestAndWaitForResponse(request_headers, 10, default_response_headers_,

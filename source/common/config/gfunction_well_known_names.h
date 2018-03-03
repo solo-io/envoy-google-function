@@ -15,7 +15,7 @@ namespace Config {
  */
 class GFunctionFilterNameValues {
 public:
-  // Lambda filter
+  // Google Cloud Functions filter
   const std::string GFUNCTION = "io.solo.gcloudfunc";
 };
 
@@ -26,14 +26,14 @@ typedef ConstSingleton<GFunctionFilterNameValues> GFunctionFilterNames;
  */
 class GFunctionMetadataFilterValues {
 public:
-  // Filter namespace for Lambda Filter.
+  // Filter namespace for Google Cloud Functions Filter.
   const std::string GFUNCTION = "io.solo.gcloudfunc";
 };
 
 typedef ConstSingleton<GFunctionMetadataFilterValues> GFunctionMetadataFilters;
 
 /**
- * Keys for MetadataFilterConstants::LAMBDA metadata.
+ * Keys for GFunctionMetadataFilterValues::GFUNCTION metadata.
  */
 class MetadataGFunctionKeyValues {
 public:
