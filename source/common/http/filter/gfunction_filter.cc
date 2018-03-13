@@ -17,9 +17,7 @@
 namespace Envoy {
 namespace Http {
 
-GfunctionFilter::GfunctionFilter(Upstream::ClusterManager &cm,
-                                 CallbackerSharedPtr cb)
-    : tracingEnabled_(false), collector_(cm, cb) {}
+GfunctionFilter::GfunctionFilter() {}
 
 GfunctionFilter::~GfunctionFilter() {}
 
@@ -37,7 +35,6 @@ Optional<const Protobuf::Value *> maybevalue(const Protobuf::Struct &spec,
   return &value;
 }
 
-// TODO(yuval-k): this is here only to see the e2e working; move to common asap.
 Optional<const std::string *>
 nonEmptyStringValue(const ProtobufWkt::Struct &spec, const std::string &key) {
 
@@ -76,18 +73,7 @@ bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
 }
 
 FilterHeadersStatus GfunctionFilter::decodeHeaders(HeaderMap &headers, bool) {
-  request_headers_ = &headers;
-  Gfunctionfy();
-
-  // Check if tracing is enabled
-  const HeaderEntry *p = headers.XB3TraceId();
-  if (p != NULL) {
-    tracingEnabled_ = true;
-    tracing_headers_ = &headers;
-  } else {
-    tracingEnabled_ = false;
-  }
-
+  Gfunctionfy(headers);
   return FilterHeadersStatus::Continue;
 }
 
@@ -95,13 +81,13 @@ FilterDataStatus GfunctionFilter::decodeData(Buffer::Instance &, bool) {
   return FilterDataStatus::Continue;
 }
 
-void GfunctionFilter::Gfunctionfy() {
+void GfunctionFilter::Gfunctionfy(HeaderMap &headers) {
 
-  request_headers_->insertMethod().value().setReference(
+  headers.insertMethod().value().setReference(
       Headers::get().MethodValues.Post);
 
-  request_headers_->insertPath().value().setReference(*path_.value());
-  request_headers_->insertHost().value().setReference(*host_.value());
+  headers.insertPath().value().setReference(*path_.value());
+  headers.insertHost().value().setReference(*host_.value());
 }
 
 FilterTrailersStatus GfunctionFilter::decodeTrailers(HeaderMap &) {
@@ -111,40 +97,6 @@ FilterTrailersStatus GfunctionFilter::decodeTrailers(HeaderMap &) {
 void GfunctionFilter::setDecoderFilterCallbacks(
     StreamDecoderFilterCallbacks &callbacks) {
   decoder_callbacks_ = &callbacks;
-}
-
-FilterHeadersStatus GfunctionFilter::encodeHeaders(HeaderMap &headers, bool) {
-  request_headers_ = &headers;
-
-  if (tracingEnabled_) {
-    const HeaderEntry *hdr =
-        headers.get(LowerCaseString("function-execution-id"));
-    if (hdr != nullptr) {
-      CloudCollector::RequestInfo info;
-      info.function_name_ = *path_.value();
-      info.region_ = *host_.value();
-      info.project_ = *host_.value();
-      info.provider_ = "google";
-      info.request_id_ = hdr->value().c_str();
-      collector_.storeRequestInfo(info, tracing_headers_);
-    }
-  } else {
-    ENVOY_LOG(info, "GFUNCTION: Not storing cloud tracing info");
-  }
-  return FilterHeadersStatus::Continue;
-}
-
-FilterDataStatus GfunctionFilter::encodeData(Buffer::Instance &, bool) {
-  return FilterDataStatus::Continue;
-}
-
-FilterTrailersStatus GfunctionFilter::encodeTrailers(HeaderMap &) {
-  return FilterTrailersStatus::Continue;
-}
-
-void GfunctionFilter::setEncoderFilterCallbacks(
-    StreamEncoderFilterCallbacks &callbacks) {
-  encoder_callbacks_ = &callbacks;
 }
 
 } // namespace Http

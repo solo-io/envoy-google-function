@@ -4,7 +4,6 @@
 
 #include "common/config/gfunction_well_known_names.h"
 #include "common/http/filter/gfunction_filter.h"
-#include "common/http/filter/solo_logger.h"
 #include "common/http/functional_stream_decoder_base.h"
 
 #include "google_func_filter.pb.validate.h"
@@ -39,14 +38,12 @@ public:
     // envoy::api::v2::filter::http::GoogleFunc &>(config);
 
     // Solo::Logger::Callbacker cb;
-    Http::CallbackerSharedPtr cb = std::make_shared<Http::Callbacker>();
 
     return
-        [&context, cb](Http::FilterChainFactoryCallbacks &callbacks) -> void {
+        [&context](Http::FilterChainFactoryCallbacks &callbacks) -> void {
           auto filter = new MixedGFunctionFilter(
-              context, Config::GFunctionFilterNames::get().GFUNCTION,
-              context.clusterManager(), cb);
-          callbacks.addStreamFilter(Http::StreamFilterSharedPtr{filter});
+              context, Config::GFunctionFilterNames::get().GFUNCTION);
+          callbacks.addStreamDecoderFilter(Http::StreamDecoderFilterSharedPtr{filter});
         };
   }
   std::string name() override {
