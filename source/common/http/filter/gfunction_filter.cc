@@ -11,49 +11,20 @@
 #include "common/common/hex.h"
 #include "common/common/utility.h"
 #include "common/config/gfunction_well_known_names.h"
+#include "common/config/solo_metadata.h"
 
 #include "server/config/network/http_connection_manager.h"
 
 namespace Envoy {
 namespace Http {
 
+using Config::SoloMetadata;
+
 GfunctionFilter::GfunctionFilter() {}
 
 GfunctionFilter::~GfunctionFilter() {}
 
 void GfunctionFilter::onDestroy() {}
-
-Optional<const Protobuf::Value *> maybevalue(const Protobuf::Struct &spec,
-                                             const std::string &key) {
-  const auto &fields = spec.fields();
-  const auto fields_it = fields.find(key);
-  if (fields_it == fields.end()) {
-    return {};
-  }
-
-  const auto &value = fields_it->second;
-  return &value;
-}
-
-Optional<const std::string *>
-nonEmptyStringValue(const ProtobufWkt::Struct &spec, const std::string &key) {
-
-  Optional<const Protobuf::Value *> maybe_value = maybevalue(spec, key);
-  if (!maybe_value.valid()) {
-    return {};
-  }
-  const auto &value = *maybe_value.value();
-  if (value.kind_case() != ProtobufWkt::Value::kStringValue) {
-    return {};
-  }
-
-  const auto &string_value = value.string_value();
-  if (string_value.empty()) {
-    return {};
-  }
-
-  return Optional<const std::string *>(&string_value);
-}
 
 bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
 
@@ -64,10 +35,10 @@ bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
   }
   const ProtobufWkt::Struct &function_spec = *maybe_function_spec.value();
 
-  host_ = nonEmptyStringValue(function_spec,
-                              Config::MetadataGFunctionKeys::get().HOST);
-  path_ = nonEmptyStringValue(function_spec,
-                              Config::MetadataGFunctionKeys::get().PATH);
+  host_ = SoloMetadata::nonEmptyStringValue(
+      function_spec, Config::MetadataGFunctionKeys::get().HOST);
+  path_ = SoloMetadata::nonEmptyStringValue(
+      function_spec, Config::MetadataGFunctionKeys::get().PATH);
 
   return host_.valid() && path_.valid();
 }
