@@ -23,8 +23,8 @@ struct Function {
 typedef std::map<std::string, Function> ClusterFunctionMap;
 
 /**
- * Since currently all http cloud functions must have a public endpoint, no auth is needed.
- * This filter just changes the headers to match the function.
+ * Since currently all http cloud functions must have a public endpoint, no auth
+ * is needed. This filter just changes the headers to match the function.
  */
 class GfunctionFilter : public StreamDecoderFilter,
                         public FunctionalFilter,

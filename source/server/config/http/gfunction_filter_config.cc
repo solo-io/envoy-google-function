@@ -39,12 +39,12 @@ public:
 
     // Solo::Logger::Callbacker cb;
 
-    return
-        [&context](Http::FilterChainFactoryCallbacks &callbacks) -> void {
-          auto filter = new MixedGFunctionFilter(
-              context, Config::GFunctionFilterNames::get().GFUNCTION);
-          callbacks.addStreamDecoderFilter(Http::StreamDecoderFilterSharedPtr{filter});
-        };
+    return [&context](Http::FilterChainFactoryCallbacks &callbacks) -> void {
+      auto filter = new MixedGFunctionFilter(
+          context, Config::GFunctionFilterNames::get().GFUNCTION);
+      callbacks.addStreamDecoderFilter(
+          Http::StreamDecoderFilterSharedPtr{filter});
+    };
   }
   std::string name() override {
     return Config::GFunctionFilterNames::get().GFUNCTION;
