@@ -83,8 +83,7 @@ FilterDataStatus GfunctionFilter::decodeData(Buffer::Instance &, bool) {
 
 void GfunctionFilter::Gfunctionfy(HeaderMap &headers) {
 
-  headers.insertMethod().value().setReference(
-      Headers::get().MethodValues.Post);
+  headers.insertMethod().value().setReference(Headers::get().MethodValues.Post);
 
   headers.insertPath().value().setReference(*path_.value());
   headers.insertHost().value().setReference(*host_.value());
