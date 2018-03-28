@@ -95,7 +95,7 @@ FilterTrailersStatus GfunctionFilter::decodeTrailers(HeaderMap &) {
 
 void GfunctionFilter::setDecoderFilterCallbacks(
     StreamDecoderFilterCallbacks &callbacks) {
-  decoder_callbacks_ = &callbacks;
+  UNREFERENCED_PARAMETER(callbacks);
 }
 
 } // namespace Http
