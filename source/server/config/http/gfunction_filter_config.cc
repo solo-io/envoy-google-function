@@ -22,7 +22,7 @@ public:
     NOT_IMPLEMENTED;
   }
 
-  ProtobufTypes::MessagePtr createEmptyConfigProto() {
+  ProtobufTypes::MessagePtr createEmptyConfigProto() override {
     return ProtobufTypes::MessagePtr{
         new envoy::api::v2::filter::http::GoogleFunc()};
   }
@@ -30,7 +30,7 @@ public:
   HttpFilterFactoryCb
   createFilterFactoryFromProto(const Protobuf::Message &config,
                                const std::string &stat_prefix,
-                               FactoryContext &context) {
+                               FactoryContext &context) override {
     UNREFERENCED_PARAMETER(config);
     UNREFERENCED_PARAMETER(stat_prefix);
 

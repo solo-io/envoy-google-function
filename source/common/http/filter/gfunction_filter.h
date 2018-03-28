@@ -53,8 +53,6 @@ private:
   Optional<const std::string *> path_;
 
   void Gfunctionfy(HeaderMap &headers);
-
-  bool active_;
 };
 
 } // namespace Http
