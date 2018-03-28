@@ -52,7 +52,8 @@ public:
 };
 
 /**
- * Static registration for this sample filter. @see RegisterFactory.
+ * Static registration for the Google Cloud Functions filter. @see
+ * RegisterFactory.
  */
 static Registry::RegisterFactory<GfunctionFilterFactory,
                                  NamedHttpFilterConfigFactory>
