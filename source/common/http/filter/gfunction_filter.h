@@ -34,7 +34,7 @@ public:
   void
   setDecoderFilterCallbacks(StreamDecoderFilterCallbacks &callbacks) override;
 
-  // Http::FunctionRetriever
+  // Http::FunctionalFilter
   bool retrieveFunction(const MetadataAccessor &meta_accessor) override;
 
 private:
