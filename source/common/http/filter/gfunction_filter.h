@@ -38,8 +38,6 @@ public:
   bool retrieveFunction(const MetadataAccessor &meta_accessor) override;
 
 private:
-  StreamDecoderFilterCallbacks *decoder_callbacks_;
-
   Optional<const std::string *> host_;
   Optional<const std::string *> path_;
 
