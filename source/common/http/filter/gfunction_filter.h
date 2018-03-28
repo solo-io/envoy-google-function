@@ -13,15 +13,6 @@
 namespace Envoy {
 namespace Http {
 
-struct Function {
-  std::string func_name_;
-  std::string hostname_;
-  std::string region_;
-  std::string project_;
-};
-
-typedef std::map<std::string, Function> ClusterFunctionMap;
-
 /**
  * Since currently all http cloud functions must have a public endpoint, no auth
  * is needed. This filter just changes the headers to match the function.
