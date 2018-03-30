@@ -15,7 +15,6 @@ envoy_cc_library(
     srcs = ["gfunction_filter_config.cc"],
     repository = "@envoy",
     deps = [
-        "//:google_func_filter_proto_cc",
         "//source/common/config:gfunction_well_known_names_lib",
         "//source/common/http/filter:gfunction_filter_lib",
         "@envoy//source/exe:envoy_common_lib",

@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package envoy.api.v2.filter.http;
-
-// [#proto-status: experimental]
-message GoogleFunc {
-}
