@@ -38,8 +38,8 @@ public:
   bool retrieveFunction(const MetadataAccessor &meta_accessor) override;
 
 private:
-  Optional<const std::string *> host_;
-  Optional<const std::string *> path_;
+  absl::optional<const std::string *> host_;
+  absl::optional<const std::string *> path_;
 
   void Gfunctionfy(HeaderMap &headers);
 };
