@@ -28,9 +28,9 @@ void GfunctionFilter::onDestroy() {}
 
 bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
 
-  Optional<const ProtobufWkt::Struct *> maybe_function_spec =
+  absl::optional<const ProtobufWkt::Struct *> maybe_function_spec =
       meta_accessor.getFunctionSpec();
-  if (!maybe_function_spec.valid()) {
+  if (!maybe_function_spec.has_value()) {
     return false;
   }
   const ProtobufWkt::Struct &function_spec = *maybe_function_spec.value();
@@ -40,7 +40,7 @@ bool GfunctionFilter::retrieveFunction(const MetadataAccessor &meta_accessor) {
   path_ = SoloMetadata::nonEmptyStringValue(
       function_spec, Config::MetadataGFunctionKeys::get().PATH);
 
-  return host_.valid() && path_.valid();
+  return host_.has_value() && path_.has_value();
 }
 
 FilterHeadersStatus GfunctionFilter::decodeHeaders(HeaderMap &headers, bool) {
