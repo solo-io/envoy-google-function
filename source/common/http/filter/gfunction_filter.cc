@@ -13,8 +13,6 @@
 #include "common/config/gfunction_well_known_names.h"
 #include "common/config/solo_metadata.h"
 
-#include "server/config/network/http_connection_manager.h"
-
 namespace Envoy {
 namespace Http {
 
