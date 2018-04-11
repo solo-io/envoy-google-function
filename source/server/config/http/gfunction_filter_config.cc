@@ -6,7 +6,7 @@
 #include "common/http/filter/gfunction_filter.h"
 #include "common/http/functional_stream_decoder_base.h"
 
-#include "server/config/http/empty_http_filter_config.h"
+#include "extensions/filters/http/common/empty_http_filter_config.h"
 
 namespace Envoy {
 namespace Server {
@@ -14,7 +14,8 @@ namespace Configuration {
 
 typedef Http::FunctionalFilterMixin<Http::GfunctionFilter> MixedGFunctionFilter;
 
-class GfunctionFilterFactory : public EmptyHttpFilterConfig {
+class GfunctionFilterFactory
+    : public Extensions::HttpFilters::Common::EmptyHttpFilterConfig {
 public:
   // Server::Configuration::NamedHttpFilterConfigFactory
   std::string name() override {

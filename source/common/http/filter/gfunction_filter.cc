@@ -12,6 +12,7 @@
 #include "common/common/utility.h"
 #include "common/config/gfunction_well_known_names.h"
 #include "common/config/solo_metadata.h"
+#include "common/http/headers.h"
 
 namespace Envoy {
 namespace Http {
