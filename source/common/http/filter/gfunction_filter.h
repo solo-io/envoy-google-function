@@ -3,12 +3,11 @@
 #include <map>
 #include <string>
 
+#include "envoy/http/filter.h"
 #include "envoy/http/metadata_accessor.h"
 #include "envoy/upstream/cluster_manager.h"
 
 #include "common/common/logger.h"
-
-#include "server/config/network/http_connection_manager.h"
 
 namespace Envoy {
 namespace Http {
