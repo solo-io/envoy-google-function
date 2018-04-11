@@ -17,7 +17,9 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "//source/common/config:gfunction_well_known_names_lib",
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//include/envoy/http:filter_interface",
+        "@envoy//source/common/common:hex_lib",
+        "@envoy//source/common/http:headers_lib",
         "@solo_envoy_common//source/common/config:solo_metadata_lib",
         "@solo_envoy_common//source/common/http:functional_stream_decoder_base_lib",
     ],
