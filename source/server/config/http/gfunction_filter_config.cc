@@ -12,19 +12,20 @@ namespace Envoy {
 namespace Server {
 namespace Configuration {
 
+using Extensions::HttpFilters::Common::EmptyHttpFilterConfig;
+
 typedef Http::FunctionalFilterMixin<Http::GfunctionFilter> MixedGFunctionFilter;
 
-class GfunctionFilterFactory
-    : public Extensions::HttpFilters::Common::EmptyHttpFilterConfig {
+/**
+ * Config registration for the Google Cloud Functions filter.
+ */
+class GfunctionFilterFactory : public EmptyHttpFilterConfig {
 public:
-  // Server::Configuration::NamedHttpFilterConfigFactory
-  std::string name() override {
-    return Config::GFunctionFilterNames::get().GFUNCTION;
-  }
+  GfunctionFilterFactory()
+      : EmptyHttpFilterConfig(Config::GFunctionFilterNames::get().GFUNCTION) {}
 
-  // Server::Configuration::EmptyHttpFilterConfig
-  HttpFilterFactoryCb createFilter(const std::string &stat_prefix,
-                                   FactoryContext &context) override {
+  Http::FilterFactoryCb createFilter(const std::string &stat_prefix,
+                                     FactoryContext &context) override {
     UNREFERENCED_PARAMETER(stat_prefix);
 
     return [&context](Http::FilterChainFactoryCallbacks &callbacks) -> void {
