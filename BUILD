@@ -18,7 +18,6 @@ envoy_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//source/server/config/http:gfunction_filter_config",
-        "@envoy//source/exe:envoy_common_lib",
     ],
 )
 
