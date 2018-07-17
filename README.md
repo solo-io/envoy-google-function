@@ -31,3 +31,13 @@ To run integration tests using a clang build:
 ```
 $ CXX=clang++-5.0 CC=clang-5.0  bazel test -c dbg --config=clang-tsan //test/integration:gfunction_filter_integration_test
 ```
+
+## E2E
+
+The e2e test requires [installing Google Cloud SDK](https://cloud.google.com/sdk/install).
+
+To run the e2e test:
+
+```
+$ bazel test //e2e/...
+```
