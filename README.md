@@ -8,18 +8,26 @@ A new filter `io.solo.gcloudfunc` which redirects requests to Google Cloud Funct
 
 To build the Envoy static binary:
 
-`bazel build //:envoy`
+```
+$ bazel build //:envoy
+```
 
 ## Testing
 
 To run the all tests:
 
-`bazel test //test/...`
+```
+$ bazel test //test/...
+```
 
 To run the all tests in debug mode:
 
-`bazel test //test/... -c dbg`
+```
+$ bazel test //test/... -c dbg
+```
 
 To run integration tests using a clang build:
 
-`CXX=clang++-5.0 CC=clang-5.0  bazel test -c dbg --config=clang-tsan //test/integration:gfunction_filter_integration_test`
+```
+$ CXX=clang++-5.0 CC=clang-5.0  bazel test -c dbg --config=clang-tsan //test/integration:gfunction_filter_integration_test
+```
