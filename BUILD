@@ -17,7 +17,7 @@ envoy_cc_library(
     repository = "@envoy",
     visibility = ["//visibility:public"],
     deps = [
-        "//source/server/config/http:gfunction_filter_config",
+        "//source/extensions/filters/http/gfunction:gfunction_filter_config",
     ],
 )
 

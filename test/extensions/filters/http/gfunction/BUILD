@@ -16,7 +16,7 @@ envoy_cc_test(
     data = [":envoy-test.conf"],
     repository = "@envoy",
     deps = [
-        "//source/server/config/http:gfunction_filter_config",
+        "//source/extensions/filters/http/gfunction:gfunction_filter_config",
         "@envoy//test/integration:http_integration_lib",
         "@envoy//test/integration:integration_lib",
     ],

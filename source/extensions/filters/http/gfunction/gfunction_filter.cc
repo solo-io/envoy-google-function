@@ -1,4 +1,4 @@
-#include "common/http/filter/gfunction_filter.h"
+#include "extensions/filters/http/gfunction/gfunction_filter.h"
 
 #include <algorithm>
 #include <list>
