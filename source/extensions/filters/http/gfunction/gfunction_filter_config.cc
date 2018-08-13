@@ -3,10 +3,10 @@
 #include "envoy/registry/registry.h"
 
 #include "common/config/gfunction_well_known_names.h"
-#include "common/http/filter/gfunction_filter.h"
 #include "common/http/functional_stream_decoder_base.h"
 
 #include "extensions/filters/http/common/empty_http_filter_config.h"
+#include "extensions/filters/http/gfunction/gfunction_filter.h"
 
 namespace Envoy {
 namespace Server {
